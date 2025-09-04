@@ -933,3 +933,5 @@ WHERE extracted_products.job_id = ?
 2025-09-04 15:55:37,128 - INFO - PRAGMA main.table_info("extracted_products")
 2025-09-04 15:55:37,128 - INFO - [raw sql] ()
 2025-09-04 15:55:37,129 - INFO - COMMIT
+2025-09-04 16:37:36,397 - ERROR - Errore durante l'esecuzione: /usr/bin/tesseract is not installed or it's not in your PATH. See README file for more information.
+2025-09-04 16:48:43,994 - ERROR - Errore durante l'esecuzione: /usr/bin/tesseract is not installed or it's not in your PATH. See README file for more information.

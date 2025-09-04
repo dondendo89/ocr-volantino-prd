@@ -1,0 +1,42 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo bianco -->
+  <rect width="400" height="300" fill="white" stroke="#ddd" stroke-width="2"/>
+  
+  <!-- Header con logo fittizio -->
+  <rect x="10" y="10" width="380" height="40" fill="#e74c3c" rx="5"/>
+  <text x="200" y="35" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="white">TOP SUPERMERCATI</text>
+  
+  <!-- Immagine prodotto simulata -->
+  <rect x="30" y="70" width="120" height="120" fill="#3498db" rx="10"/>
+  <text x="90" y="120" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">PASTA</text>
+  <text x="90" y="140" text-anchor="middle" font-family="Arial" font-size="12" fill="white">IMMAGINE</text>
+  
+  <!-- Informazioni prodotto -->
+  <text x="170" y="90" font-family="Arial" font-size="20" font-weight="bold" fill="#2c3e50">Spaghetti Barilla</text>
+  
+  <!-- Marca evidenziata -->
+  <rect x="170" y="100" width="80" height="25" fill="#f39c12" rx="3"/>
+  <text x="210" y="118" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">BARILLA</text>
+  
+  <!-- Quantità -->
+  <text x="170" y="145" font-family="Arial" font-size="16" fill="#7f8c8d">Peso: 500g</text>
+  
+  <!-- Prezzo grande e visibile -->
+  <rect x="170" y="160" width="120" height="50" fill="#e74c3c" rx="5"/>
+  <text x="230" y="185" text-anchor="middle" font-family="Arial" font-size="24" font-weight="bold" fill="white">€ 1,89</text>
+  <text x="230" y="200" text-anchor="middle" font-family="Arial" font-size="12" fill="white">al pezzo</text>
+  
+  <!-- Categoria -->
+  <text x="170" y="230" font-family="Arial" font-size="14" fill="#95a5a6">Categoria: Pasta e Cereali</text>
+  
+  <!-- Offerta speciale -->
+  <ellipse cx="320" cy="120" rx="60" ry="30" fill="#f1c40f"/>
+  <text x="320" y="115" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#2c3e50">OFFERTA</text>
+  <text x="320" y="130" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#2c3e50">SPECIALE</text>
+  
+  <!-- Codice prodotto -->
+  <text x="30" y="250" font-family="Arial" font-size="10" fill="#bdc3c7">Cod: 12345678</text>
+  
+  <!-- Data validità -->
+  <text x="30" y="270" font-family="Arial" font-size="10" fill="#bdc3c7">Valido fino al 31/12/2024</text>
+</svg>
