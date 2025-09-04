@@ -1,0 +1,94 @@
+2025-09-04 09:18:12,810 [DEBUG] urllib3.connectionpool: Starting new HTTPS connection (1): huggingface.co:443
+2025-09-04 09:18:13,066 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/config.json HTTP/1.1" 307 0
+2025-09-04 09:18:13,098 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/config.json HTTP/1.1" 200 0
+2025-09-04 09:18:13,099 [DEBUG] filelock: Attempting to acquire lock 10693579088 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/475108a5b7258ec54b499255ff24a165c00b3c8e.lock
+2025-09-04 09:18:13,100 [DEBUG] filelock: Lock 10693579088 acquired on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/475108a5b7258ec54b499255ff24a165c00b3c8e.lock
+2025-09-04 09:18:13,127 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "GET /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/config.json HTTP/1.1" 200 998
+2025-09-04 09:18:13,130 [DEBUG] filelock: Attempting to release lock 10693579088 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/475108a5b7258ec54b499255ff24a165c00b3c8e.lock
+2025-09-04 09:18:13,130 [DEBUG] filelock: Lock 10693579088 released on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/475108a5b7258ec54b499255ff24a165c00b3c8e.lock
+2025-09-04 09:18:13,323 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/model.safetensors HTTP/1.1" 302 0
+2025-09-04 09:18:13,400 [DEBUG] filelock: Attempting to acquire lock 10716106832 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/9a90b161380a5549418764749cabe9257dce2df7fa58bcec648289f00f982ebb.lock
+2025-09-04 09:18:13,400 [DEBUG] filelock: Lock 10716106832 acquired on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/9a90b161380a5549418764749cabe9257dce2df7fa58bcec648289f00f982ebb.lock
+2025-09-04 09:18:13,680 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "GET /api/models/dbmdz/bert-large-cased-finetuned-conll03-english/xet-read-token/4c534963167c08d4b8ff1f88733cf2930f86add0 HTTP/1.1" 200 325
+2025-09-04 09:20:12,892 [DEBUG] filelock: Attempting to release lock 10716106832 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/9a90b161380a5549418764749cabe9257dce2df7fa58bcec648289f00f982ebb.lock
+2025-09-04 09:20:12,893 [DEBUG] filelock: Lock 10716106832 released on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/9a90b161380a5549418764749cabe9257dce2df7fa58bcec648289f00f982ebb.lock
+2025-09-04 09:20:37,238 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/tokenizer_config.json HTTP/1.1" 307 0
+2025-09-04 09:20:37,270 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/tokenizer_config.json HTTP/1.1" 200 0
+2025-09-04 09:20:37,273 [DEBUG] filelock: Attempting to acquire lock 10716168592 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/51df46866521163930f728ea075afbf53f0f73c5.lock
+2025-09-04 09:20:37,273 [DEBUG] filelock: Lock 10716168592 acquired on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/51df46866521163930f728ea075afbf53f0f73c5.lock
+2025-09-04 09:20:37,301 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "GET /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/tokenizer_config.json HTTP/1.1" 200 60
+2025-09-04 09:20:37,304 [DEBUG] filelock: Attempting to release lock 10716168592 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/51df46866521163930f728ea075afbf53f0f73c5.lock
+2025-09-04 09:20:37,304 [DEBUG] filelock: Lock 10716168592 released on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/51df46866521163930f728ea075afbf53f0f73c5.lock
+2025-09-04 09:20:37,459 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/vocab.txt HTTP/1.1" 307 0
+2025-09-04 09:20:37,491 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/vocab.txt HTTP/1.1" 200 0
+2025-09-04 09:20:37,492 [DEBUG] filelock: Attempting to acquire lock 10707510672 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/2ea941cc79a6f3d7985ca6991ef4f67dad62af04.lock
+2025-09-04 09:20:37,492 [DEBUG] filelock: Lock 10707510672 acquired on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/2ea941cc79a6f3d7985ca6991ef4f67dad62af04.lock
+2025-09-04 09:20:37,522 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "GET /api/resolve-cache/models/dbmdz/bert-large-cased-finetuned-conll03-english/4c534963167c08d4b8ff1f88733cf2930f86add0/vocab.txt HTTP/1.1" 200 None
+2025-09-04 09:20:37,564 [DEBUG] filelock: Attempting to release lock 10707510672 on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/2ea941cc79a6f3d7985ca6991ef4f67dad62af04.lock
+2025-09-04 09:20:37,565 [DEBUG] filelock: Lock 10707510672 released on /Users/dev1/.cache/huggingface/hub/.locks/models--dbmdz--bert-large-cased-finetuned-conll03-english/2ea941cc79a6f3d7985ca6991ef4f67dad62af04.lock
+2025-09-04 09:20:37,716 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/tokenizer.json HTTP/1.1" 404 0
+2025-09-04 09:20:37,964 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/added_tokens.json HTTP/1.1" 404 0
+2025-09-04 09:20:38,172 [DEBUG] urllib3.connectionpool: https://huggingface.co:443 "HEAD /dbmdz/bert-large-cased-finetuned-conll03-english/resolve/main/special_tokens_map.json HTTP/1.1" 404 0
+2025-09-04 09:20:38,278 [INFO] __main__: Iniziando elaborazione di https://www.topsupermercati.it/volantino.pdf
+2025-09-04 09:20:38,289 [DEBUG] urllib3.connectionpool: Starting new HTTPS connection (1): www.topsupermercati.it:443
+2025-09-04 09:20:38,408 [DEBUG] urllib3.connectionpool: https://www.topsupermercati.it:443 "GET /volantino.pdf HTTP/1.1" 200 8420732
+2025-09-04 09:21:55,271 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:21:55,272 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:21:55,272 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:21:56,703 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:21:56,703 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:21:56,703 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:21:58,086 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:21:58,087 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:21:58,087 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:21:59,762 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:21:59,763 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:21:59,763 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:22:01,245 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:22:01,246 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:22:01,246 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:01,350 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:01,351 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:01,351 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:02,875 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:02,875 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:02,875 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:04,410 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:04,410 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:04,410 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:05,459 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:05,460 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:05,460 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:06,774 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:06,774 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:06,774 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:51,714 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:51,714 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:51,714 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:52,928 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:52,928 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:52,928 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:54,093 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:54,093 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:54,093 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:55,222 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:55,222 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:55,222 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:23:56,562 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:23:56,563 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:23:56,563 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:24:38,552 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:24:38,552 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:24:38,553 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:24:39,613 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:24:39,613 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:24:39,613 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:24:40,294 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:24:40,294 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:24:40,294 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:24:41,426 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:24:41,426 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:24:41,426 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192
+2025-09-04 09:24:42,634 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2025-09-04 09:24:42,634 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 41 9
+2025-09-04 09:24:42,635 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 62 8192

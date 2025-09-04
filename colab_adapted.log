@@ -1,0 +1,935 @@
+2025-09-04 14:59:39,075 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 14:59:39,117 - INFO - Job abeff934-1462-4d78-a028-7f618b0a74b8 creato per file sample_flyer.jpg
+2025-09-04 15:15:23,785 - INFO - BEGIN (implicit)
+2025-09-04 15:15:23,790 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:15:23,795 - INFO - [raw sql] ()
+2025-09-04 15:15:23,808 - INFO - PRAGMA temp.table_info("processing_jobs")
+2025-09-04 15:15:23,808 - INFO - [raw sql] ()
+2025-09-04 15:15:23,809 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:15:23,809 - INFO - [raw sql] ()
+2025-09-04 15:15:23,809 - INFO - PRAGMA temp.table_info("extracted_products")
+2025-09-04 15:15:23,809 - INFO - [raw sql] ()
+2025-09-04 15:15:23,810 - INFO - 
+CREATE TABLE processing_jobs (
+	id VARCHAR NOT NULL, 
+	filename VARCHAR NOT NULL, 
+	file_path VARCHAR NOT NULL, 
+	status VARCHAR NOT NULL, 
+	progress INTEGER, 
+	message TEXT, 
+	created_at DATETIME, 
+	started_at DATETIME, 
+	completed_at DATETIME, 
+	processing_time FLOAT, 
+	total_products INTEGER, 
+	PRIMARY KEY (id)
+)
+
+
+2025-09-04 15:15:23,810 - INFO - [no key 0.00019s] ()
+2025-09-04 15:15:23,827 - INFO - 
+CREATE TABLE extracted_products (
+	id INTEGER NOT NULL, 
+	job_id VARCHAR NOT NULL, 
+	nome VARCHAR NOT NULL, 
+	prezzo FLOAT, 
+	prezzo_originale FLOAT, 
+	sconto_percentuale FLOAT, 
+	quantita VARCHAR, 
+	marca VARCHAR, 
+	categoria VARCHAR, 
+	posizione_x INTEGER, 
+	posizione_y INTEGER, 
+	posizione_width INTEGER, 
+	posizione_height INTEGER, 
+	confidence_score FLOAT, 
+	extracted_at DATETIME, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(job_id) REFERENCES processing_jobs (id)
+)
+
+
+2025-09-04 15:15:23,827 - INFO - [no key 0.00020s] ()
+2025-09-04 15:15:23,842 - INFO - COMMIT
+2025-09-04 15:15:35,051 - INFO - BEGIN (implicit)
+2025-09-04 15:15:35,056 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:15:35,056 - INFO - [generated in 0.00074s] ()
+2025-09-04 15:15:35,060 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:15:35,060 - INFO - [generated in 0.00030s] ('completed',)
+2025-09-04 15:15:35,061 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:15:35,061 - INFO - [cached since 0.001501s ago] ('failed',)
+2025-09-04 15:15:35,066 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:15:35,066 - INFO - [generated in 0.00034s] ('queued', 'processing')
+2025-09-04 15:15:35,072 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:15:35,073 - INFO - [generated in 0.00053s] ()
+2025-09-04 15:15:35,073 - INFO - ROLLBACK
+2025-09-04 15:15:40,344 - INFO - BEGIN (implicit)
+2025-09-04 15:15:40,344 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:15:40,344 - INFO - [cached since 5.289s ago] ()
+2025-09-04 15:15:40,345 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:15:40,346 - INFO - [cached since 5.286s ago] ('completed',)
+2025-09-04 15:15:40,346 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:15:40,352 - INFO - [cached since 5.292s ago] ('failed',)
+2025-09-04 15:15:40,354 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:15:40,358 - INFO - [cached since 5.292s ago] ('queued', 'processing')
+2025-09-04 15:15:40,359 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:15:40,376 - INFO - [cached since 5.304s ago] ()
+2025-09-04 15:15:40,377 - INFO - ROLLBACK
+2025-09-04 15:15:40,420 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:18:02,213 - INFO - BEGIN (implicit)
+2025-09-04 15:18:02,214 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:18:02,214 - INFO - [raw sql] ()
+2025-09-04 15:18:02,216 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:18:02,216 - INFO - [raw sql] ()
+2025-09-04 15:18:02,216 - INFO - COMMIT
+2025-09-04 15:18:02,264 - INFO - BEGIN (implicit)
+2025-09-04 15:18:02,270 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:18:02,270 - INFO - [generated in 0.00026s] ()
+2025-09-04 15:18:02,274 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:18:02,274 - INFO - [generated in 0.00030s] ('completed',)
+2025-09-04 15:18:02,275 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:18:02,276 - INFO - [cached since 0.001689s ago] ('failed',)
+2025-09-04 15:18:02,278 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:18:02,278 - INFO - [generated in 0.00031s] ('queued', 'processing')
+2025-09-04 15:18:02,287 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:18:02,287 - INFO - [generated in 0.00044s] ()
+2025-09-04 15:18:02,288 - INFO - ROLLBACK
+2025-09-04 15:18:02,323 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:19:21,045 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,046 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:19:21,046 - INFO - [raw sql] ()
+2025-09-04 15:19:21,052 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:19:21,052 - INFO - [raw sql] ()
+2025-09-04 15:19:21,053 - INFO - COMMIT
+2025-09-04 15:19:21,133 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,138 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:19:21,200 - INFO - [generated in 0.06212s] ()
+2025-09-04 15:19:21,257 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:19:21,257 - INFO - [generated in 0.00076s] ('completed',)
+2025-09-04 15:19:21,266 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:19:21,267 - INFO - [cached since 0.0107s ago] ('failed',)
+2025-09-04 15:19:21,270 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:19:21,271 - INFO - [generated in 0.00036s] ('queued', 'processing')
+2025-09-04 15:19:21,277 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:19:21,278 - INFO - [generated in 0.00045s] ()
+2025-09-04 15:19:21,283 - INFO - ROLLBACK
+2025-09-04 15:19:21,314 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:19:21,315 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,316 - INFO - INSERT INTO processing_jobs (id, filename, file_path, status, progress, message, created_at, started_at, completed_at, processing_time, total_products) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:19:21,317 - INFO - [generated in 0.00037s] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 'sample_flyer.jpg', 'temp_uploads/temp_90c16bce-f8d6-4fa5-8273-0c12109591f3_sample_flyer.jpg', 'queued', 0, None, '2025-09-04 13:19:21.316779', None, None, None, 0)
+2025-09-04 15:19:21,318 - INFO - COMMIT
+2025-09-04 15:19:21,362 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,363 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,363 - INFO - [generated in 0.00026s] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,364 - INFO - ROLLBACK
+2025-09-04 15:19:21,365 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,366 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,366 - INFO - [generated in 0.00024s] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,368 - INFO - UPDATE processing_jobs SET message=? WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,368 - INFO - [generated in 0.00024s] ('File caricato, elaborazione in coda', '3f0808da-8d9c-4cb2-914c-6714ca032ea7')
+2025-09-04 15:19:21,369 - INFO - COMMIT
+2025-09-04 15:19:21,409 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,411 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,411 - INFO - [cached since 0.04768s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,411 - INFO - ROLLBACK
+2025-09-04 15:19:21,412 - INFO - Job 3f0808da-8d9c-4cb2-914c-6714ca032ea7 creato per file sample_flyer.jpg
+2025-09-04 15:19:21,467 - INFO - Avvio elaborazione job 3f0808da-8d9c-4cb2-914c-6714ca032ea7
+2025-09-04 15:19:21,467 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,468 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,468 - INFO - [cached since 0.102s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,469 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, started_at=? WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,470 - INFO - [generated in 0.00049s] ('processing', 10, 'Elaborazione in corso...', '2025-09-04 13:19:21.468836', '3f0808da-8d9c-4cb2-914c-6714ca032ea7')
+2025-09-04 15:19:21,470 - INFO - COMMIT
+2025-09-04 15:19:21,488 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,488 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,488 - INFO - [cached since 0.1255s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,489 - INFO - ROLLBACK
+2025-09-04 15:19:21,489 - INFO - Inizio elaborazione volantino: temp_uploads/3f0808da-8d9c-4cb2-914c-6714ca032ea7_sample_flyer.jpg
+2025-09-04 15:19:21,490 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,490 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,490 - INFO - [cached since 0.1242s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,491 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,491 - INFO - [generated in 0.00022s] (30, 'Analisi immagine...', '3f0808da-8d9c-4cb2-914c-6714ca032ea7')
+2025-09-04 15:19:21,492 - INFO - COMMIT
+2025-09-04 15:19:21,552 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,552 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,552 - INFO - [cached since 0.1894s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,553 - INFO - ROLLBACK
+2025-09-04 15:19:21,553 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,554 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,554 - INFO - [cached since 0.188s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,555 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,555 - INFO - [cached since 0.06367s ago] (80, 'Estrazione dati...', '3f0808da-8d9c-4cb2-914c-6714ca032ea7')
+2025-09-04 15:19:21,555 - INFO - COMMIT
+2025-09-04 15:19:21,609 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,609 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,610 - INFO - [cached since 0.2466s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,610 - INFO - ROLLBACK
+2025-09-04 15:19:21,611 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,613 - INFO - INSERT INTO extracted_products (job_id, nome, prezzo, prezzo_originale, sconto_percentuale, quantita, marca, categoria, posizione_x, posizione_y, posizione_width, posizione_height, confidence_score, extracted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:19:21,613 - INFO - [generated in 0.00037s] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 'Prodotto Test', 2.99, None, None, None, 'Test Brand', 'Test Category', None, None, None, None, None, '2025-09-04 13:19:21.613019')
+2025-09-04 15:19:21,615 - INFO - COMMIT
+2025-09-04 15:19:21,634 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,635 - INFO - SELECT extracted_products.id, extracted_products.job_id, extracted_products.nome, extracted_products.prezzo, extracted_products.prezzo_originale, extracted_products.sconto_percentuale, extracted_products.quantita, extracted_products.marca, extracted_products.categoria, extracted_products.posizione_x, extracted_products.posizione_y, extracted_products.posizione_width, extracted_products.posizione_height, extracted_products.confidence_score, extracted_products.extracted_at 
+FROM extracted_products 
+WHERE extracted_products.id = ?
+2025-09-04 15:19:21,635 - INFO - [generated in 0.00030s] (1,)
+2025-09-04 15:19:21,636 - INFO - ROLLBACK
+2025-09-04 15:19:21,636 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,637 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,637 - INFO - [cached since 0.2709s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,638 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, completed_at=?, processing_time=?, total_products=? WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,638 - INFO - [generated in 0.00025s] ('completed', 100, 'Elaborazione completata. Trovati 1 prodotti', '2025-09-04 13:19:21.637678', 0.121569, 1, '3f0808da-8d9c-4cb2-914c-6714ca032ea7')
+2025-09-04 15:19:21,639 - INFO - COMMIT
+2025-09-04 15:19:21,668 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,669 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:19:21,669 - INFO - [cached since 0.3058s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7',)
+2025-09-04 15:19:21,669 - INFO - ROLLBACK
+2025-09-04 15:19:21,669 - INFO - Job 3f0808da-8d9c-4cb2-914c-6714ca032ea7 completato con successo. Trovati 1 prodotti
+2025-09-04 15:19:21,670 - INFO - File temporaneo rimosso: temp_uploads/3f0808da-8d9c-4cb2-914c-6714ca032ea7_sample_flyer.jpg
+2025-09-04 15:19:21,674 - INFO - BEGIN (implicit)
+2025-09-04 15:19:21,675 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:21,675 - INFO - [cached since 0.3091s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:21,675 - INFO - ROLLBACK
+2025-09-04 15:19:27,117 - INFO - BEGIN (implicit)
+2025-09-04 15:19:27,117 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:27,117 - INFO - [cached since 5.752s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:27,118 - INFO - ROLLBACK
+2025-09-04 15:19:32,132 - INFO - BEGIN (implicit)
+2025-09-04 15:19:32,133 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:32,133 - INFO - [cached since 10.77s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:32,133 - INFO - ROLLBACK
+2025-09-04 15:19:37,150 - INFO - BEGIN (implicit)
+2025-09-04 15:19:37,151 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:37,151 - INFO - [cached since 15.79s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:37,151 - INFO - ROLLBACK
+2025-09-04 15:19:42,159 - INFO - BEGIN (implicit)
+2025-09-04 15:19:42,159 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:42,159 - INFO - [cached since 20.79s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:42,160 - INFO - ROLLBACK
+2025-09-04 15:19:47,176 - INFO - BEGIN (implicit)
+2025-09-04 15:19:47,177 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:47,177 - INFO - [cached since 25.81s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:47,178 - INFO - ROLLBACK
+2025-09-04 15:19:52,184 - INFO - BEGIN (implicit)
+2025-09-04 15:19:52,185 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:52,185 - INFO - [cached since 30.82s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:52,185 - INFO - ROLLBACK
+2025-09-04 15:19:57,194 - INFO - BEGIN (implicit)
+2025-09-04 15:19:57,195 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:19:57,195 - INFO - [cached since 35.83s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:19:57,195 - INFO - ROLLBACK
+2025-09-04 15:20:02,204 - INFO - BEGIN (implicit)
+2025-09-04 15:20:02,204 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:02,204 - INFO - [cached since 40.84s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:02,205 - INFO - ROLLBACK
+2025-09-04 15:20:07,213 - INFO - BEGIN (implicit)
+2025-09-04 15:20:07,214 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:07,214 - INFO - [cached since 45.85s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:07,215 - INFO - ROLLBACK
+2025-09-04 15:20:12,220 - INFO - BEGIN (implicit)
+2025-09-04 15:20:12,221 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:12,221 - INFO - [cached since 50.86s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:12,222 - INFO - ROLLBACK
+2025-09-04 15:20:17,231 - INFO - BEGIN (implicit)
+2025-09-04 15:20:17,231 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:17,232 - INFO - [cached since 55.87s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:17,233 - INFO - ROLLBACK
+2025-09-04 15:20:22,244 - INFO - BEGIN (implicit)
+2025-09-04 15:20:22,245 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:22,245 - INFO - [cached since 60.88s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:22,246 - INFO - ROLLBACK
+2025-09-04 15:20:27,256 - INFO - BEGIN (implicit)
+2025-09-04 15:20:27,257 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:27,257 - INFO - [cached since 65.89s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:27,257 - INFO - ROLLBACK
+2025-09-04 15:20:32,264 - INFO - BEGIN (implicit)
+2025-09-04 15:20:32,265 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:32,265 - INFO - [cached since 70.9s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:32,265 - INFO - ROLLBACK
+2025-09-04 15:20:37,276 - INFO - BEGIN (implicit)
+2025-09-04 15:20:37,277 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:37,277 - INFO - [cached since 75.91s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:37,278 - INFO - ROLLBACK
+2025-09-04 15:20:42,290 - INFO - BEGIN (implicit)
+2025-09-04 15:20:42,290 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:42,291 - INFO - [cached since 80.93s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:42,291 - INFO - ROLLBACK
+2025-09-04 15:20:47,297 - INFO - BEGIN (implicit)
+2025-09-04 15:20:47,298 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:47,298 - INFO - [cached since 85.93s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:47,298 - INFO - ROLLBACK
+2025-09-04 15:20:52,320 - INFO - BEGIN (implicit)
+2025-09-04 15:20:52,320 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:52,321 - INFO - [cached since 90.96s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:52,321 - INFO - ROLLBACK
+2025-09-04 15:20:57,329 - INFO - BEGIN (implicit)
+2025-09-04 15:20:57,329 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:20:57,330 - INFO - [cached since 95.97s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:20:57,331 - INFO - ROLLBACK
+2025-09-04 15:21:02,339 - INFO - BEGIN (implicit)
+2025-09-04 15:21:02,340 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:21:02,340 - INFO - [cached since 101s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:21:02,341 - INFO - ROLLBACK
+2025-09-04 15:21:07,351 - INFO - BEGIN (implicit)
+2025-09-04 15:21:07,351 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:21:07,352 - INFO - [cached since 106s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:21:07,352 - INFO - ROLLBACK
+2025-09-04 15:21:12,365 - INFO - BEGIN (implicit)
+2025-09-04 15:21:12,365 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:21:12,366 - INFO - [cached since 111s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:21:12,367 - INFO - ROLLBACK
+2025-09-04 15:21:17,378 - INFO - BEGIN (implicit)
+2025-09-04 15:21:17,378 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:21:17,379 - INFO - [cached since 116s ago] ('3f0808da-8d9c-4cb2-914c-6714ca032ea7', 1, 0)
+2025-09-04 15:21:17,379 - INFO - ROLLBACK
+2025-09-04 15:22:46,423 - INFO - BEGIN (implicit)
+2025-09-04 15:22:46,436 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:22:46,436 - INFO - [raw sql] ()
+2025-09-04 15:22:46,450 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:22:46,451 - INFO - [raw sql] ()
+2025-09-04 15:22:46,457 - INFO - COMMIT
+2025-09-04 15:22:49,914 - INFO - BEGIN (implicit)
+2025-09-04 15:22:49,920 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:22:49,920 - INFO - [generated in 0.00030s] ()
+2025-09-04 15:22:49,927 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:22:49,928 - INFO - [generated in 0.00034s] ('completed',)
+2025-09-04 15:22:49,931 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:22:49,931 - INFO - [cached since 0.003757s ago] ('failed',)
+2025-09-04 15:22:49,936 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:22:49,939 - INFO - [generated in 0.00310s] ('queued', 'processing')
+2025-09-04 15:22:49,947 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:22:49,948 - INFO - [generated in 0.00113s] ()
+2025-09-04 15:22:49,951 - INFO - ROLLBACK
+2025-09-04 15:22:49,970 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:22:49,982 - INFO - BEGIN (implicit)
+2025-09-04 15:22:49,984 - INFO - INSERT INTO processing_jobs (id, filename, file_path, status, progress, message, created_at, started_at, completed_at, processing_time, total_products) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:22:49,984 - INFO - [generated in 0.00038s] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 'sample_flyer.jpg', 'temp_uploads/temp_b56cec79-502c-41fc-9595-a703965c979e_sample_flyer.jpg', 'queued', 0, None, '2025-09-04 13:22:49.984466', None, None, None, 0)
+2025-09-04 15:22:49,994 - INFO - COMMIT
+2025-09-04 15:22:50,029 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,031 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,032 - INFO - [generated in 0.00095s] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,032 - INFO - ROLLBACK
+2025-09-04 15:22:50,033 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,035 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,040 - INFO - [generated in 0.00585s] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,043 - INFO - UPDATE processing_jobs SET message=? WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,044 - INFO - [generated in 0.00025s] ('File caricato, elaborazione in coda', 'f7f2f29f-2c8b-4ecb-8646-5da6a8570d23')
+2025-09-04 15:22:50,044 - INFO - COMMIT
+2025-09-04 15:22:50,064 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,065 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,065 - INFO - [cached since 0.03452s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,066 - INFO - ROLLBACK
+2025-09-04 15:22:50,066 - INFO - Job f7f2f29f-2c8b-4ecb-8646-5da6a8570d23 creato per file sample_flyer.jpg
+2025-09-04 15:22:50,066 - INFO - Avvio elaborazione job f7f2f29f-2c8b-4ecb-8646-5da6a8570d23
+2025-09-04 15:22:50,067 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,067 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,068 - INFO - [cached since 0.03313s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,069 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, started_at=? WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,069 - INFO - [generated in 0.00025s] ('processing', 10, 'Elaborazione in corso...', '2025-09-04 13:22:50.068610', 'f7f2f29f-2c8b-4ecb-8646-5da6a8570d23')
+2025-09-04 15:22:50,070 - INFO - COMMIT
+2025-09-04 15:22:50,110 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,110 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,111 - INFO - [cached since 0.08006s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,111 - INFO - ROLLBACK
+2025-09-04 15:22:50,112 - INFO - Inizio elaborazione volantino: temp_uploads/f7f2f29f-2c8b-4ecb-8646-5da6a8570d23_sample_flyer.jpg
+2025-09-04 15:22:50,112 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,112 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,113 - INFO - [cached since 0.07831s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,114 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,114 - INFO - [generated in 0.00026s] (30, 'Analisi immagine...', 'f7f2f29f-2c8b-4ecb-8646-5da6a8570d23')
+2025-09-04 15:22:50,115 - INFO - COMMIT
+2025-09-04 15:22:50,140 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,141 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,143 - INFO - [cached since 0.1121s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,144 - INFO - ROLLBACK
+2025-09-04 15:22:50,144 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,145 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,145 - INFO - [cached since 0.1111s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,147 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,147 - INFO - [cached since 0.03276s ago] (80, 'Estrazione dati...', 'f7f2f29f-2c8b-4ecb-8646-5da6a8570d23')
+2025-09-04 15:22:50,148 - INFO - COMMIT
+2025-09-04 15:22:50,174 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,175 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,176 - INFO - [cached since 0.1451s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,183 - INFO - ROLLBACK
+2025-09-04 15:22:50,184 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,186 - INFO - INSERT INTO extracted_products (job_id, nome, prezzo, prezzo_originale, sconto_percentuale, quantita, marca, categoria, posizione_x, posizione_y, posizione_width, posizione_height, confidence_score, extracted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:22:50,186 - INFO - [generated in 0.00033s] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 'Prodotto Test', 2.99, None, None, None, 'Test Brand', 'Test Category', None, None, None, None, None, '2025-09-04 13:22:50.186356')
+2025-09-04 15:22:50,187 - INFO - COMMIT
+2025-09-04 15:22:50,190 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,191 - INFO - SELECT extracted_products.id, extracted_products.job_id, extracted_products.nome, extracted_products.prezzo, extracted_products.prezzo_originale, extracted_products.sconto_percentuale, extracted_products.quantita, extracted_products.marca, extracted_products.categoria, extracted_products.posizione_x, extracted_products.posizione_y, extracted_products.posizione_width, extracted_products.posizione_height, extracted_products.confidence_score, extracted_products.extracted_at 
+FROM extracted_products 
+WHERE extracted_products.id = ?
+2025-09-04 15:22:50,192 - INFO - [generated in 0.00122s] (2,)
+2025-09-04 15:22:50,193 - INFO - ROLLBACK
+2025-09-04 15:22:50,193 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,194 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,194 - INFO - [cached since 0.1594s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,195 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, completed_at=?, processing_time=?, total_products=? WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,195 - INFO - [generated in 0.00025s] ('completed', 100, 'Elaborazione completata. Trovati 1 prodotti', '2025-09-04 13:22:50.194821', 0.071647, 1, 'f7f2f29f-2c8b-4ecb-8646-5da6a8570d23')
+2025-09-04 15:22:50,196 - INFO - COMMIT
+2025-09-04 15:22:50,204 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,204 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:22:50,204 - INFO - [cached since 0.1734s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23',)
+2025-09-04 15:22:50,204 - INFO - ROLLBACK
+2025-09-04 15:22:50,205 - INFO - Job f7f2f29f-2c8b-4ecb-8646-5da6a8570d23 completato con successo. Trovati 1 prodotti
+2025-09-04 15:22:50,217 - INFO - File temporaneo rimosso: temp_uploads/f7f2f29f-2c8b-4ecb-8646-5da6a8570d23_sample_flyer.jpg
+2025-09-04 15:22:50,222 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,223 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,223 - INFO - [cached since 0.1888s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,224 - INFO - ROLLBACK
+2025-09-04 15:22:50,260 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,261 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,261 - INFO - [cached since 0.2267s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,262 - INFO - ROLLBACK
+2025-09-04 15:22:50,262 - ERROR - Errore durante recupero risultati job f7f2f29f-2c8b-4ecb-8646-5da6a8570d23: 'DatabaseManager' object has no attribute 'get_products_by_job'
+2025-09-04 15:22:50,266 - INFO - BEGIN (implicit)
+2025-09-04 15:22:50,267 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:22:50,267 - INFO - [cached since 0.2329s ago] ('f7f2f29f-2c8b-4ecb-8646-5da6a8570d23', 1, 0)
+2025-09-04 15:22:50,268 - INFO - ROLLBACK
+2025-09-04 15:22:50,268 - ERROR - Errore durante recupero prodotti job f7f2f29f-2c8b-4ecb-8646-5da6a8570d23: 'DatabaseManager' object has no attribute 'get_products_by_job'
+2025-09-04 15:25:16,180 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,190 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:25:16,191 - INFO - [raw sql] ()
+2025-09-04 15:25:16,196 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:25:16,197 - INFO - [raw sql] ()
+2025-09-04 15:25:16,197 - INFO - COMMIT
+2025-09-04 15:25:16,244 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,252 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:25:16,255 - INFO - [generated in 0.00246s] ()
+2025-09-04 15:25:16,262 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:25:16,267 - INFO - [generated in 0.00552s] ('completed',)
+2025-09-04 15:25:16,273 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:25:16,273 - INFO - [cached since 0.01124s ago] ('failed',)
+2025-09-04 15:25:16,276 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:25:16,277 - INFO - [generated in 0.00055s] ('queued', 'processing')
+2025-09-04 15:25:16,284 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:25:16,287 - INFO - [generated in 0.00272s] ()
+2025-09-04 15:25:16,291 - INFO - ROLLBACK
+2025-09-04 15:25:16,342 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:25:16,345 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,347 - INFO - INSERT INTO processing_jobs (id, filename, file_path, status, progress, message, created_at, started_at, completed_at, processing_time, total_products) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:25:16,347 - INFO - [generated in 0.00046s] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 'sample_flyer.jpg', 'temp_uploads/temp_449cffe7-7244-46be-b132-995c68e436d9_sample_flyer.jpg', 'queued', 0, None, '2025-09-04 13:25:16.347648', None, None, None, 0)
+2025-09-04 15:25:16,351 - INFO - COMMIT
+2025-09-04 15:25:16,369 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,370 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,370 - INFO - [generated in 0.00023s] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,371 - INFO - ROLLBACK
+2025-09-04 15:25:16,372 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,373 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,374 - INFO - [generated in 0.00085s] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,378 - INFO - UPDATE processing_jobs SET message=? WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,378 - INFO - [generated in 0.00030s] ('File caricato, elaborazione in coda', '56e74b41-8a25-4cf1-822c-a5ac66ac5db0')
+2025-09-04 15:25:16,379 - INFO - COMMIT
+2025-09-04 15:25:16,412 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,412 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,412 - INFO - [cached since 0.04262s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,420 - INFO - ROLLBACK
+2025-09-04 15:25:16,421 - INFO - Job 56e74b41-8a25-4cf1-822c-a5ac66ac5db0 creato per file sample_flyer.jpg
+2025-09-04 15:25:16,421 - INFO - Avvio elaborazione job 56e74b41-8a25-4cf1-822c-a5ac66ac5db0
+2025-09-04 15:25:16,425 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,425 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,426 - INFO - [cached since 0.05303s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,428 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, started_at=? WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,428 - INFO - [generated in 0.00047s] ('processing', 10, 'Elaborazione in corso...', '2025-09-04 13:25:16.427323', '56e74b41-8a25-4cf1-822c-a5ac66ac5db0')
+2025-09-04 15:25:16,429 - INFO - COMMIT
+2025-09-04 15:25:16,444 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,445 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,445 - INFO - [cached since 0.07518s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,446 - INFO - ROLLBACK
+2025-09-04 15:25:16,446 - INFO - Inizio elaborazione volantino: temp_uploads/56e74b41-8a25-4cf1-822c-a5ac66ac5db0_sample_flyer.jpg
+2025-09-04 15:25:16,447 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,448 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,448 - INFO - [cached since 0.0754s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,450 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,451 - INFO - [generated in 0.00046s] (30, 'Analisi immagine...', '56e74b41-8a25-4cf1-822c-a5ac66ac5db0')
+2025-09-04 15:25:16,451 - INFO - COMMIT
+2025-09-04 15:25:16,458 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,460 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,460 - INFO - [cached since 0.09061s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,462 - INFO - ROLLBACK
+2025-09-04 15:25:16,468 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,468 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,469 - INFO - [cached since 0.09633s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,471 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,471 - INFO - [cached since 0.02063s ago] (80, 'Estrazione dati...', '56e74b41-8a25-4cf1-822c-a5ac66ac5db0')
+2025-09-04 15:25:16,472 - INFO - COMMIT
+2025-09-04 15:25:16,477 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,478 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,478 - INFO - [cached since 0.1084s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,479 - INFO - ROLLBACK
+2025-09-04 15:25:16,480 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,481 - INFO - INSERT INTO extracted_products (job_id, nome, prezzo, prezzo_originale, sconto_percentuale, quantita, marca, categoria, posizione_x, posizione_y, posizione_width, posizione_height, confidence_score, extracted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:25:16,482 - INFO - [generated in 0.00048s] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 'Prodotto Test', 2.99, None, None, None, 'Test Brand', 'Test Category', None, None, None, None, None, '2025-09-04 13:25:16.481583')
+2025-09-04 15:25:16,485 - INFO - COMMIT
+2025-09-04 15:25:16,503 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,504 - INFO - SELECT extracted_products.id, extracted_products.job_id, extracted_products.nome, extracted_products.prezzo, extracted_products.prezzo_originale, extracted_products.sconto_percentuale, extracted_products.quantita, extracted_products.marca, extracted_products.categoria, extracted_products.posizione_x, extracted_products.posizione_y, extracted_products.posizione_width, extracted_products.posizione_height, extracted_products.confidence_score, extracted_products.extracted_at 
+FROM extracted_products 
+WHERE extracted_products.id = ?
+2025-09-04 15:25:16,514 - INFO - [generated in 0.01016s] (3,)
+2025-09-04 15:25:16,518 - INFO - ROLLBACK
+2025-09-04 15:25:16,519 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,520 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,520 - INFO - [cached since 0.1472s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,522 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, completed_at=?, processing_time=?, total_products=? WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,522 - INFO - [generated in 0.00045s] ('completed', 100, 'Elaborazione completata. Trovati 1 prodotti', '2025-09-04 13:25:16.521298', 0.03289, 1, '56e74b41-8a25-4cf1-822c-a5ac66ac5db0')
+2025-09-04 15:25:16,524 - INFO - COMMIT
+2025-09-04 15:25:16,542 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,542 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:25:16,542 - INFO - [cached since 0.1723s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,542 - INFO - ROLLBACK
+2025-09-04 15:25:16,543 - INFO - Job 56e74b41-8a25-4cf1-822c-a5ac66ac5db0 completato con successo. Trovati 1 prodotti
+2025-09-04 15:25:16,548 - INFO - File temporaneo rimosso: temp_uploads/56e74b41-8a25-4cf1-822c-a5ac66ac5db0_sample_flyer.jpg
+2025-09-04 15:25:16,556 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,556 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,556 - INFO - [cached since 0.1836s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,557 - INFO - ROLLBACK
+2025-09-04 15:25:16,598 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,598 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,602 - INFO - [cached since 0.2288s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,602 - INFO - ROLLBACK
+2025-09-04 15:25:16,603 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,604 - INFO - SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products 
+WHERE extracted_products.job_id = ?
+2025-09-04 15:25:16,604 - INFO - [generated in 0.00043s] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,605 - INFO - ROLLBACK
+2025-09-04 15:25:16,605 - ERROR - Errore durante recupero risultati job 56e74b41-8a25-4cf1-822c-a5ac66ac5db0: 'ExtractedProduct' object has no attribute 'posizione'
+2025-09-04 15:25:16,610 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,611 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:25:16,611 - INFO - [cached since 0.2386s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0', 1, 0)
+2025-09-04 15:25:16,612 - INFO - ROLLBACK
+2025-09-04 15:25:16,612 - INFO - BEGIN (implicit)
+2025-09-04 15:25:16,613 - INFO - SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products 
+WHERE extracted_products.job_id = ?
+2025-09-04 15:25:16,614 - INFO - [cached since 0.009962s ago] ('56e74b41-8a25-4cf1-822c-a5ac66ac5db0',)
+2025-09-04 15:25:16,614 - INFO - ROLLBACK
+2025-09-04 15:25:16,614 - ERROR - Errore durante recupero prodotti job 56e74b41-8a25-4cf1-822c-a5ac66ac5db0: 'ExtractedProduct' object has no attribute 'posizione'
+2025-09-04 15:28:15,927 - INFO - BEGIN (implicit)
+2025-09-04 15:28:15,934 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:28:15,935 - INFO - [raw sql] ()
+2025-09-04 15:28:15,939 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:28:15,939 - INFO - [raw sql] ()
+2025-09-04 15:28:15,939 - INFO - COMMIT
+2025-09-04 15:28:15,983 - INFO - BEGIN (implicit)
+2025-09-04 15:28:15,989 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs) AS anon_1
+2025-09-04 15:28:15,992 - INFO - [generated in 0.00240s] ()
+2025-09-04 15:28:16,000 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:28:16,012 - INFO - [generated in 0.01213s] ('completed',)
+2025-09-04 15:28:16,022 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status = ?) AS anon_1
+2025-09-04 15:28:16,023 - INFO - [cached since 0.02379s ago] ('failed',)
+2025-09-04 15:28:16,027 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.status IN (?, ?)) AS anon_1
+2025-09-04 15:28:16,029 - INFO - [generated in 0.00154s] ('queued', 'processing')
+2025-09-04 15:28:16,039 - INFO - SELECT count(*) AS count_1 
+FROM (SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products) AS anon_1
+2025-09-04 15:28:16,039 - INFO - [generated in 0.00070s] ()
+2025-09-04 15:28:16,044 - INFO - ROLLBACK
+2025-09-04 15:28:16,072 - INFO - Ricevuto upload file: sample_flyer.jpg, size: 34266, type: image/jpeg
+2025-09-04 15:28:16,084 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,085 - INFO - INSERT INTO processing_jobs (id, filename, file_path, status, progress, message, created_at, started_at, completed_at, processing_time, total_products) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:28:16,086 - INFO - [generated in 0.00052s] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 'sample_flyer.jpg', 'temp_uploads/temp_fcea291f-807b-42a6-87c4-0fb45407904c_sample_flyer.jpg', 'queued', 0, None, '2025-09-04 13:28:16.085716', None, None, None, 0)
+2025-09-04 15:28:16,091 - INFO - COMMIT
+2025-09-04 15:28:16,123 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,128 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,129 - INFO - [generated in 0.00042s] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,148 - INFO - ROLLBACK
+2025-09-04 15:28:16,148 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,150 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,150 - INFO - [generated in 0.00028s] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,152 - INFO - UPDATE processing_jobs SET message=? WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,153 - INFO - [generated in 0.00116s] ('File caricato, elaborazione in coda', 'a497f0cf-cb63-4f9f-b100-89acd55efb92')
+2025-09-04 15:28:16,156 - INFO - COMMIT
+2025-09-04 15:28:16,185 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,185 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,186 - INFO - [cached since 0.0573s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,199 - INFO - ROLLBACK
+2025-09-04 15:28:16,199 - INFO - Job a497f0cf-cb63-4f9f-b100-89acd55efb92 creato per file sample_flyer.jpg
+2025-09-04 15:28:16,200 - INFO - Avvio elaborazione job a497f0cf-cb63-4f9f-b100-89acd55efb92
+2025-09-04 15:28:16,200 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,201 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,202 - INFO - [cached since 0.05234s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,203 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, started_at=? WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,204 - INFO - [generated in 0.00025s] ('processing', 10, 'Elaborazione in corso...', '2025-09-04 13:28:16.203088', 'a497f0cf-cb63-4f9f-b100-89acd55efb92')
+2025-09-04 15:28:16,204 - INFO - COMMIT
+2025-09-04 15:28:16,213 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,213 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,213 - INFO - [cached since 0.08487s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,214 - INFO - ROLLBACK
+2025-09-04 15:28:16,214 - INFO - Inizio elaborazione volantino: temp_uploads/a497f0cf-cb63-4f9f-b100-89acd55efb92_sample_flyer.jpg
+2025-09-04 15:28:16,214 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,216 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,216 - INFO - [cached since 0.0669s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,219 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,219 - INFO - [generated in 0.00025s] (30, 'Analisi immagine...', 'a497f0cf-cb63-4f9f-b100-89acd55efb92')
+2025-09-04 15:28:16,219 - INFO - COMMIT
+2025-09-04 15:28:16,227 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,227 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,227 - INFO - [cached since 0.09917s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,237 - INFO - ROLLBACK
+2025-09-04 15:28:16,238 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,238 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,239 - INFO - [cached since 0.08905s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,239 - INFO - UPDATE processing_jobs SET progress=?, message=? WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,240 - INFO - [cached since 0.02112s ago] (80, 'Estrazione dati...', 'a497f0cf-cb63-4f9f-b100-89acd55efb92')
+2025-09-04 15:28:16,241 - INFO - COMMIT
+2025-09-04 15:28:16,253 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,253 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,254 - INFO - [cached since 0.1253s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,261 - INFO - ROLLBACK
+2025-09-04 15:28:16,261 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,263 - INFO - INSERT INTO extracted_products (job_id, nome, prezzo, prezzo_originale, sconto_percentuale, quantita, marca, categoria, posizione_x, posizione_y, posizione_width, posizione_height, confidence_score, extracted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2025-09-04 15:28:16,263 - INFO - [generated in 0.00056s] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 'Prodotto Test', 2.99, None, None, None, 'Test Brand', 'Test Category', None, None, None, None, None, '2025-09-04 13:28:16.263523')
+2025-09-04 15:28:16,271 - INFO - COMMIT
+2025-09-04 15:28:16,295 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,296 - INFO - SELECT extracted_products.id, extracted_products.job_id, extracted_products.nome, extracted_products.prezzo, extracted_products.prezzo_originale, extracted_products.sconto_percentuale, extracted_products.quantita, extracted_products.marca, extracted_products.categoria, extracted_products.posizione_x, extracted_products.posizione_y, extracted_products.posizione_width, extracted_products.posizione_height, extracted_products.confidence_score, extracted_products.extracted_at 
+FROM extracted_products 
+WHERE extracted_products.id = ?
+2025-09-04 15:28:16,297 - INFO - [generated in 0.00028s] (4,)
+2025-09-04 15:28:16,297 - INFO - ROLLBACK
+2025-09-04 15:28:16,298 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,298 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,298 - INFO - [cached since 0.1488s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,300 - INFO - UPDATE processing_jobs SET status=?, progress=?, message=?, completed_at=?, processing_time=?, total_products=? WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,300 - INFO - [generated in 0.00026s] ('completed', 100, 'Elaborazione completata. Trovati 1 prodotti', '2025-09-04 13:28:16.299431', 0.047154, 1, 'a497f0cf-cb63-4f9f-b100-89acd55efb92')
+2025-09-04 15:28:16,301 - INFO - COMMIT
+2025-09-04 15:28:16,309 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,310 - INFO - SELECT processing_jobs.id, processing_jobs.filename, processing_jobs.file_path, processing_jobs.status, processing_jobs.progress, processing_jobs.message, processing_jobs.created_at, processing_jobs.started_at, processing_jobs.completed_at, processing_jobs.processing_time, processing_jobs.total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+2025-09-04 15:28:16,310 - INFO - [cached since 0.1818s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,311 - INFO - ROLLBACK
+2025-09-04 15:28:16,311 - INFO - Job a497f0cf-cb63-4f9f-b100-89acd55efb92 completato con successo. Trovati 1 prodotti
+2025-09-04 15:28:16,312 - INFO - File temporaneo rimosso: temp_uploads/a497f0cf-cb63-4f9f-b100-89acd55efb92_sample_flyer.jpg
+2025-09-04 15:28:16,316 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,317 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,317 - INFO - [cached since 0.1675s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,318 - INFO - ROLLBACK
+2025-09-04 15:28:16,322 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,323 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,323 - INFO - [cached since 0.1737s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,324 - INFO - ROLLBACK
+2025-09-04 15:28:16,324 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,325 - INFO - SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products 
+WHERE extracted_products.job_id = ?
+2025-09-04 15:28:16,327 - INFO - [generated in 0.00129s] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,327 - INFO - ROLLBACK
+2025-09-04 15:28:16,344 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,345 - INFO - SELECT processing_jobs.id AS processing_jobs_id, processing_jobs.filename AS processing_jobs_filename, processing_jobs.file_path AS processing_jobs_file_path, processing_jobs.status AS processing_jobs_status, processing_jobs.progress AS processing_jobs_progress, processing_jobs.message AS processing_jobs_message, processing_jobs.created_at AS processing_jobs_created_at, processing_jobs.started_at AS processing_jobs_started_at, processing_jobs.completed_at AS processing_jobs_completed_at, processing_jobs.processing_time AS processing_jobs_processing_time, processing_jobs.total_products AS processing_jobs_total_products 
+FROM processing_jobs 
+WHERE processing_jobs.id = ?
+ LIMIT ? OFFSET ?
+2025-09-04 15:28:16,355 - INFO - [cached since 0.2057s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92', 1, 0)
+2025-09-04 15:28:16,356 - INFO - ROLLBACK
+2025-09-04 15:28:16,356 - INFO - BEGIN (implicit)
+2025-09-04 15:28:16,357 - INFO - SELECT extracted_products.id AS extracted_products_id, extracted_products.job_id AS extracted_products_job_id, extracted_products.nome AS extracted_products_nome, extracted_products.prezzo AS extracted_products_prezzo, extracted_products.prezzo_originale AS extracted_products_prezzo_originale, extracted_products.sconto_percentuale AS extracted_products_sconto_percentuale, extracted_products.quantita AS extracted_products_quantita, extracted_products.marca AS extracted_products_marca, extracted_products.categoria AS extracted_products_categoria, extracted_products.posizione_x AS extracted_products_posizione_x, extracted_products.posizione_y AS extracted_products_posizione_y, extracted_products.posizione_width AS extracted_products_posizione_width, extracted_products.posizione_height AS extracted_products_posizione_height, extracted_products.confidence_score AS extracted_products_confidence_score, extracted_products.extracted_at AS extracted_products_extracted_at 
+FROM extracted_products 
+WHERE extracted_products.job_id = ?
+2025-09-04 15:28:16,357 - INFO - [cached since 0.03182s ago] ('a497f0cf-cb63-4f9f-b100-89acd55efb92',)
+2025-09-04 15:28:16,358 - INFO - ROLLBACK
+2025-09-04 15:46:26,045 - INFO - BEGIN (implicit)
+2025-09-04 15:46:26,064 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:46:26,064 - INFO - [raw sql] ()
+2025-09-04 15:46:26,069 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:46:26,069 - INFO - [raw sql] ()
+2025-09-04 15:46:26,071 - INFO - COMMIT
+2025-09-04 15:55:37,125 - INFO - BEGIN (implicit)
+2025-09-04 15:55:37,126 - INFO - PRAGMA main.table_info("processing_jobs")
+2025-09-04 15:55:37,127 - INFO - [raw sql] ()
+2025-09-04 15:55:37,128 - INFO - PRAGMA main.table_info("extracted_products")
+2025-09-04 15:55:37,128 - INFO - [raw sql] ()
+2025-09-04 15:55:37,129 - INFO - COMMIT
