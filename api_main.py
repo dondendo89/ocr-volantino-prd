@@ -39,8 +39,12 @@ except ImportError:
             ]
         }
 
-# Import del database
-from database import db_manager
+# Import del database (opzionale per deployment semplificato)
+try:
+    from database import db_manager
+except ImportError:
+    print("Attenzione: modulo database non disponibile. Funzionalità database disabilitate.")
+    db_manager = None
 
 app = FastAPI(
     title=API_CONFIG["title"],
@@ -117,24 +121,30 @@ async def root():
 async def health_check():
     """Controllo stato del servizio"""
     try:
-        db_stats = db_manager.get_stats()
-        return {
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "database": "connected",
-            "active_jobs": db_stats["active_jobs"],
-            "completed_jobs": db_stats["completed_jobs"],
-            "total_jobs": db_stats["total_jobs"],
-            "total_products": db_stats["total_products"]
-        }
+        if db_manager:
+            db_stats = db_manager.get_stats()
+            return {
+                "status": "healthy",
+                "timestamp": datetime.now().isoformat(),
+                "database": "connected",
+                "active_jobs": db_stats["active_jobs"],
+                "completed_jobs": db_stats["completed_jobs"],
+                "total_jobs": db_stats["total_jobs"],
+                "total_products": db_stats["total_products"]
+            }
+        else:
+            return {
+                "status": "healthy",
+                "timestamp": datetime.now().isoformat(),
+                "database": "not_configured",
+                "message": "Database non configurato, funzionalità limitate"
+            }
     except Exception as e:
         return {
             "status": "degraded",
             "timestamp": datetime.now().isoformat(),
             "database": "error",
-            "error": str(e),
-            "active_jobs": len([j for j in jobs_storage.values() if j["status"] in ["queued", "processing"]]),
-            "completed_jobs": len([j for j in jobs_storage.values() if j["status"] == "completed"])
+            "error": str(e)
         }
 
 async def process_flyer_async(job_id: str, file_path: str):
@@ -142,19 +152,22 @@ async def process_flyer_async(job_id: str, file_path: str):
     try:
         logger.info(f"Avvio elaborazione job {job_id}")
         
-        # Aggiorna stato a "processing" nel database
-        db_manager.update_job_status(job_id, "processing", progress=10, message="Elaborazione in corso...")
+        # Aggiorna stato a "processing" nel database (se disponibile)
+        if db_manager:
+            db_manager.update_job_status(job_id, "processing", progress=10, message="Elaborazione in corso...")
         
         start_time = datetime.now()
         
         # Elabora il volantino usando il nostro script OCR
         logger.info(f"Inizio elaborazione volantino: {file_path}")
-        db_manager.update_job_status(job_id, "processing", progress=30, message="Analisi immagine...")
+        if db_manager:
+            db_manager.update_job_status(job_id, "processing", progress=30, message="Analisi immagine...")
         
         # Chiama la funzione OCR principale
         extracted_data = process_flyer_image(file_path)
         
-        db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati...")
+        if db_manager:
+            db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati...")
         
         # Converte i risultati nel formato API
         products = []
@@ -174,19 +187,20 @@ async def process_flyer_async(job_id: str, file_path: str):
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
         
-        # Salva prodotti nel database
-        if products:
+        # Salva prodotti nel database (se disponibile)
+        if db_manager and products:
             db_manager.save_products(job_id, products)
         
-        # Aggiorna job come completato nel database
-        db_manager.update_job_status(
-            job_id, 
-            "completed", 
-            progress=100, 
-            message=f"Elaborazione completata. Trovati {len(products)} prodotti",
-            processing_time=processing_time,
-            total_products=len(products)
-        )
+        # Aggiorna job come completato nel database (se disponibile)
+        if db_manager:
+            db_manager.update_job_status(
+                job_id, 
+                "completed", 
+                progress=100, 
+                message=f"Elaborazione completata. Trovati {len(products)} prodotti",
+                processing_time=processing_time,
+                total_products=len(products)
+            )
         
         logger.info(f"Job {job_id} completato con successo. Trovati {len(products)} prodotti")
         
@@ -195,13 +209,14 @@ async def process_flyer_async(job_id: str, file_path: str):
         logger.error(f"Errore job {job_id}: {error_msg}")
         logger.error(traceback.format_exc())
         
-        # Segna job come fallito nel database
-        db_manager.update_job_status(
-            job_id, 
-            "failed", 
-            progress=0, 
-            message=error_msg
-        )
+        # Segna job come fallito nel database (se disponibile)
+        if db_manager:
+            db_manager.update_job_status(
+                job_id, 
+                "failed", 
+                progress=0, 
+                message=error_msg
+            )
     
     finally:
         # Cleanup del file temporaneo se configurato
@@ -250,30 +265,37 @@ async def upload_flyer(
             detail=f"Errore durante il salvataggio del file: {str(e)}"
         )
     
-    # Crea job nel database (genera automaticamente l'ID)
-    job = db_manager.create_job(
-        filename=file.filename,
-        file_path=str(temp_file_path)
-    )
-    
-    # Aggiorna il file path con l'ID del job
-    final_filename = f"{job.id}_{file.filename}"
-    final_file_path = TEMP_DIR / final_filename
-    
-    # Rinomina il file con l'ID del job
-    os.rename(temp_file_path, final_file_path)
-    
-    # Aggiorna il path nel database
-    db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
+    # Crea job nel database (se disponibile)
+    if db_manager:
+        job = db_manager.create_job(
+            filename=file.filename,
+            file_path=str(temp_file_path)
+        )
+        job_id = job.id
+        
+        # Aggiorna il file path con l'ID del job
+        final_filename = f"{job.id}_{file.filename}"
+        final_file_path = TEMP_DIR / final_filename
+        
+        # Rinomina il file con l'ID del job
+        os.rename(temp_file_path, final_file_path)
+        
+        # Aggiorna il path nel database
+        db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
+    else:
+        # Genera un job_id semplice se il database non è disponibile
+        job_id = str(uuid.uuid4())
+        final_file_path = temp_file_path
+        logger.info(f"Creato job temporaneo {job_id} per file {file.filename} (database non disponibile)")
     
     # Avvia elaborazione in background
-    background_tasks.add_task(process_flyer_async, job.id, str(final_file_path))
+    background_tasks.add_task(process_flyer_async, job_id, str(final_file_path))
     
-    logger.info(f"Job {job.id} creato per file {file.filename}")
+    logger.info(f"Job {job_id} creato per file {file.filename}")
     
     return {
         "success": True,
-        "job_id": job.id,
+        "job_id": job_id,
         "status": "queued",
         "message": get_response_message("upload_success"),
         "estimated_time": "30-60 secondi",
@@ -284,6 +306,12 @@ async def upload_flyer(
 @app.get("/jobs/{job_id}", response_model=JobStatus)
 async def get_job_status(job_id: str):
     """Ottieni lo stato di elaborazione di un job"""
+    
+    if not db_manager:
+        raise HTTPException(
+            status_code=503,
+            detail="Database non disponibile. Funzionalità di tracking job disabilitata."
+        )
     
     job = db_manager.get_job(job_id)
     
@@ -303,6 +331,12 @@ async def get_job_status(job_id: str):
 async def get_results(job_id: str):
     """Ottieni i risultati dell'elaborazione"""
     try:
+        if not db_manager:
+            raise HTTPException(
+                status_code=503,
+                detail="Database non disponibile. Funzionalità di recupero risultati disabilitata."
+            )
+        
         job = db_manager.get_job(job_id)
         
         if not job:
@@ -330,7 +364,7 @@ async def get_results(job_id: str):
             }
         
         # Recupera i prodotti dal database
-        products = db_manager.get_products(job_id)
+        products = db_manager.get_products(job_id) if db_manager else []
         
         return {
             "success": True,
@@ -356,6 +390,12 @@ async def get_results(job_id: str):
 async def get_products(job_id: str):
     """Ottieni solo i prodotti estratti da un job"""
     try:
+        if not db_manager:
+            raise HTTPException(
+                status_code=503,
+                detail="Database non disponibile. Funzionalità di recupero prodotti disabilitata."
+            )
+        
         job = db_manager.get_job(job_id)
         
         if not job:
@@ -374,7 +414,7 @@ async def get_products(job_id: str):
             return []
         
         # Recupera i prodotti dal database
-        products = db_manager.get_products(job_id)
+        products = db_manager.get_products(job_id) if db_manager else []
         
         return [p.to_dict() for p in products]
         
