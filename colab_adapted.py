@@ -18,6 +18,10 @@ from PIL import Image
 import logging
 from datetime import datetime
 
+# Configurazione Tesseract per ambiente Linux (Render)
+if os.name == 'posix':  # Linux/Unix
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+
 # Configurazione logging
 logging.basicConfig(
     level=logging.INFO,
