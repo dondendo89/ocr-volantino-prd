@@ -8,8 +8,7 @@ pydantic==1.10.12
 requests==2.31.0
 python-dotenv==1.0.0
 
-# PDF processing - versione leggera
-PyMuPDF==1.22.5
+# File processing
 aiofiles==23.2.1
 
 # Production server
