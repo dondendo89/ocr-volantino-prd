@@ -5,6 +5,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime, timedelta
 import uuid
 import os
+import traceback
 from typing import List, Optional
 from api_config import DATABASE_CONFIG
 
@@ -143,7 +144,14 @@ class DatabaseManager:
     def __init__(self):
         self.engine = None
         self.SessionLocal = None
-        self.setup_database()
+        try:
+            print("🔧 Inizializzazione DatabaseManager...")
+            self.setup_database()
+            print("✅ DatabaseManager inizializzato con successo")
+        except Exception as e:
+            print(f"❌ Errore durante inizializzazione DatabaseManager: {e}")
+            print(f"❌ Traceback: {traceback.format_exc()}")
+            raise
     
     def setup_database(self):
         """Configura la connessione al database"""
