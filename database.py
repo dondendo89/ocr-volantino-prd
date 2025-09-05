@@ -387,9 +387,15 @@ class DatabaseManager:
         """Recupera tutti i jobs con paginazione"""
         session = self.get_session()
         try:
-            return session.query(ProcessingJob).order_by(
+            jobs = session.query(ProcessingJob).order_by(
                 ProcessingJob.created_at.desc()
             ).offset(offset).limit(limit).all()
+            session.commit()  # Commit esplicito per evitare ROLLBACK
+            return jobs
+        except Exception as e:
+            session.rollback()
+            print(f"Errore in get_all_jobs: {e}")
+            raise
         finally:
             session.close()
     
