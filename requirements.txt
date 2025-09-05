@@ -17,5 +17,5 @@ gunicorn==21.2.0
 # AI Libraries - Rimosso temporaneamente per debug build
 # google-generativeai==0.7.2
 
-# Image processing
-pillow==10.0.0
+# Image processing - Rimosso temporaneamente per debug
+# Pillow==10.0.0
