@@ -390,6 +390,13 @@ class DatabaseManager:
             jobs = session.query(ProcessingJob).order_by(
                 ProcessingJob.created_at.desc()
             ).offset(offset).limit(limit).all()
+            
+            # Forza il caricamento di tutti gli attributi prima di chiudere la sessione
+            for job in jobs:
+                # Accedi agli attributi per forzare il caricamento
+                _ = job.id, job.filename, job.status, job.supermercato_nome
+                _ = job.created_at, job.completed_at, job.total_products
+            
             session.commit()  # Commit esplicito per evitare ROLLBACK
             return jobs
         except Exception as e:
