@@ -233,7 +233,12 @@ class ProductCardGenerator:
                                            5, self.colors['price_bg'])
                 
                 if prezzo:
-                    price_text = f"€ {prezzo:.2f}"
+                    # Assicurati che prezzo sia un numero
+                    try:
+                        prezzo_num = float(prezzo)
+                        price_text = f"€ {prezzo_num:.2f}"
+                    except (ValueError, TypeError):
+                        price_text = f"€ {str(prezzo)}"
                 else:
                     price_text = str(prezzo_str)
                 
@@ -271,7 +276,14 @@ class ProductCardGenerator:
                          font=self.fonts['small'], 
                          fill=self.colors['text_dark'], 
                          anchor='mm')
-                draw.text((offer_x, offer_y + 8), f"-{sconto:.0f}%", 
+                # Assicurati che sconto sia un numero
+                try:
+                    sconto_num = float(sconto)
+                    sconto_text = f"-{sconto_num:.0f}%"
+                except (ValueError, TypeError):
+                    sconto_text = f"-{str(sconto)}%"
+                
+                draw.text((offer_x, offer_y + 8), sconto_text, 
                          font=self.fonts['small'], 
                          fill=self.colors['text_dark'], 
                          anchor='mm')
