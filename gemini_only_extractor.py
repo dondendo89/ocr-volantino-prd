@@ -233,13 +233,13 @@ Regole importanti:
                 # Ottieni configurazione API corrente
                 current_key, current_url = self.get_next_api_config()
                 
-                # Chiamata API con timeout più lungo
+                # Chiamata API con timeout ottimizzato
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(
                     current_url, 
                     json=payload, 
                     headers=headers, 
-                    timeout=120  # 2 minuti di timeout
+                    timeout=45  # 45 secondi di timeout per evitare blocchi
                 )
                 
                 if response.status_code == 200:
