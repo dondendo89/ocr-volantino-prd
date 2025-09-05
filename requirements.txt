@@ -14,6 +14,10 @@ aiofiles==23.2.1
 # Production server
 gunicorn==21.2.0
 
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
 # AI Libraries - Rimosso temporaneamente per debug build
 # google-generativeai==0.7.2
 
