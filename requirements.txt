@@ -14,9 +14,8 @@ aiofiles==23.2.1
 # Production server
 gunicorn==21.2.0
 
-# Database
+# Database - rimosso psycopg2 per compatibilità
 sqlalchemy==2.0.19
-psycopg2-binary==2.9.7
 
 # AI Libraries - Solo Gemini per Render
 google-generativeai==0.3.2
