@@ -45,8 +45,16 @@ except ImportError:
 # Import del database (opzionale per deployment semplificato)
 try:
     from database import db_manager, ProcessingJob
-except ImportError:
+    print(f"✅ Database importato con successo. URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
+except ImportError as e:
+    print(f"❌ Errore import database: {e}")
+    print(f"❌ DATABASE_URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
     print("Attenzione: modulo database non disponibile. Funzionalità database disabilitate.")
+    db_manager = None
+    ProcessingJob = None
+except Exception as e:
+    print(f"❌ Errore generico durante import database: {e}")
+    print(f"❌ DATABASE_URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
     db_manager = None
     ProcessingJob = None
 

@@ -148,6 +148,7 @@ class DatabaseManager:
     def setup_database(self):
         """Configura la connessione al database"""
         database_url = DATABASE_CONFIG["url"]
+        print(f"🔧 Configurando database con URL: {database_url[:50]}...")
         
         # Per SQLite, assicuriamoci che la directory esista
         if database_url.startswith("sqlite"):
@@ -155,18 +156,28 @@ class DatabaseManager:
             db_dir = os.path.dirname(db_path)
             if db_dir and not os.path.exists(db_dir):
                 os.makedirs(db_dir, exist_ok=True)
+            print(f"📁 Database SQLite configurato: {db_path}")
+        elif database_url.startswith("postgresql"):
+            print(f"🐘 Database PostgreSQL configurato")
         
-        self.engine = create_engine(
-            database_url,
-            echo=DATABASE_CONFIG["echo"],
-            pool_size=DATABASE_CONFIG.get("pool_size", 10),
-            max_overflow=DATABASE_CONFIG.get("max_overflow", 20)
-        )
-        
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
-        
-        # Crea le tabelle
-        Base.metadata.create_all(bind=self.engine)
+        try:
+            self.engine = create_engine(
+                database_url,
+                echo=DATABASE_CONFIG["echo"],
+                pool_size=DATABASE_CONFIG.get("pool_size", 10),
+                max_overflow=DATABASE_CONFIG.get("max_overflow", 20)
+            )
+            print(f"✅ Engine database creato con successo")
+            
+            self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            print(f"✅ SessionLocal configurato")
+            
+            # Crea le tabelle
+            Base.metadata.create_all(bind=self.engine)
+            print(f"✅ Tabelle database create/verificate")
+        except Exception as e:
+            print(f"❌ Errore durante setup database: {e}")
+            raise
     
     def get_session(self):
         """Ottiene una sessione del database"""
