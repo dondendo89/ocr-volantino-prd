@@ -25,7 +25,7 @@ from api_config import (
 )
 
 # Import del nostro modulo OCR
-from gemini_only_extractor import GeminiOnlyExtractor
+from gemini_only_extractor import MultiAIExtractor as GeminiOnlyExtractor
 
 # Import del database
 from database import db_manager, ProcessingJob
