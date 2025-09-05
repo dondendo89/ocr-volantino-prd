@@ -383,36 +383,33 @@ Regole importanti:
         logger.info(f"🔍 DEBUG: job_id presente: {self.job_id}")
         
         try:
-            if self.db_manager and self.job_id:
-                logger.info(f"🔍 DEBUG: Preparando dati per il database...")
-                # Converte i prezzi dal formato italiano
-                prezzo_originale_float = self.convert_price_to_float(product_data.get('prezzo_originale'))
-                
-                # Prepara i dati nel formato richiesto dal database
-                db_product_data = {
-                    'nome': product_data.get('nome', ''),
-                    'prezzo': product_data.get('prezzo'),
-                    'prezzo_originale': prezzo_originale_float,  # Ora è un float
-                    'marca': product_data.get('marca', ''),
-                    'categoria': product_data.get('categoria', ''),
-                    'quantita': product_data.get('tipo_prodotto', ''),  # Usa tipo_prodotto come quantità
-                    'confidence_score': 0.95  # Score di default
-                }
-                logger.info(f"🔍 DEBUG: Dati preparati: {db_product_data}")
-                
-                # Usa save_products che si aspetta una lista
-                logger.info(f"🔍 DEBUG: Chiamando db_manager.save_products...")
-                products = self.db_manager.save_products(self.job_id, [db_product_data])
-                logger.info(f"🔍 DEBUG: Risultato save_products: {len(products) if products else 0} prodotti")
-                
-                if products:
-                    logger.info(f"💾 Prodotto salvato nel DB: {product_data['nome']}")
-                    logger.info(f"✅ DEBUG: Prodotto salvato con successo")
-                    return True
-                else:
-                    logger.info(f"❌ DEBUG: save_products ha restituito lista vuota")
+            logger.info(f"🔍 DEBUG: Preparando dati per il database...")
+            # Converte i prezzi dal formato italiano
+            prezzo_originale_float = self.convert_price_to_float(product_data.get('prezzo_originale'))
+            
+            # Prepara i dati nel formato richiesto dal database
+            db_product_data = {
+                'nome': product_data.get('nome', ''),
+                'prezzo': product_data.get('prezzo'),
+                'prezzo_originale': prezzo_originale_float,  # Ora è un float
+                'marca': product_data.get('marca', ''),
+                'categoria': product_data.get('categoria', ''),
+                'quantita': product_data.get('tipo_prodotto', ''),  # Usa tipo_prodotto come quantità
+                'confidence_score': 0.95  # Score di default
+            }
+            logger.info(f"🔍 DEBUG: Dati preparati: {db_product_data}")
+            
+            # Usa save_products che si aspetta una lista
+            logger.info(f"🔍 DEBUG: Chiamando db_manager.save_products...")
+            products = self.db_manager.save_products(self.job_id, [db_product_data])
+            logger.info(f"🔍 DEBUG: Risultato save_products: {len(products) if products else 0} prodotti")
+            
+            if products:
+                logger.info(f"💾 Prodotto salvato nel DB: {product_data['nome']}")
+                logger.info(f"✅ DEBUG: Prodotto salvato con successo")
+                return True
             else:
-                logger.info(f"❌ DEBUG: Condizioni non soddisfatte - db_manager: {self.db_manager is not None}, job_id: {self.job_id}")
+                logger.info(f"❌ DEBUG: save_products ha restituito lista vuota")
         except Exception as e:
             logger.error(f"❌ Errore salvataggio DB: {e}")
             logger.error(f"❌ DEBUG: Eccezione durante salvataggio: {e}")
@@ -598,18 +595,17 @@ Regole importanti:
         logger.info(f"📁 Immagini prodotti salvate in: {self.product_images_dir}")
         
         # Aggiorna il job con il numero totale di prodotti estratti
-        if self.db_manager and self.job_id:
-            try:
-                self.db_manager.update_job_status(
-                    self.job_id, 
-                    "completed", 
-                    progress=100,
-                    total_products=len(all_results),
-                    message=f"Estrazione completata: {len(all_results)} prodotti trovati"
-                )
-                logger.info(f"✅ Job {self.job_id} aggiornato con {len(all_results)} prodotti")
-            except Exception as e:
-                logger.error(f"❌ Errore aggiornamento job: {e}")
+        try:
+            self.db_manager.update_job_status(
+                self.job_id, 
+                "completed", 
+                progress=100,
+                total_products=len(all_results),
+                message=f"Estrazione completata: {len(all_results)} prodotti trovati"
+            )
+            logger.info(f"✅ Job {self.job_id} aggiornato con {len(all_results)} prodotti")
+        except Exception as e:
+            logger.error(f"❌ Errore aggiornamento job: {e}")
         
         # Mostra riepilogo
         brands = set(r['marca'] for r in all_results if r['marca'] != 'Non identificata')

@@ -25,38 +25,11 @@ from api_config import (
 )
 
 # Import del nostro modulo OCR
-try:
-    from gemini_only_extractor import GeminiOnlyExtractor
-except ImportError:
-    print("Attenzione: modulo gemini_only_extractor non trovato. Verrà usata una funzione mock.")
-    class GeminiOnlyExtractor:
-        def __init__(self, gemini_api_key=None, gemini_api_key_2=None, job_id=None, db_manager=None, supermercato_nome="SUPERMERCATO", **kwargs):
-            pass
-        def run(self, pdf_source=None, source_type="file"):
-            return [
-                {
-                    'nome': 'Prodotto Test',
-                    'prezzo': 2.99,
-                    'marca': 'Test Brand',
-                    'categoria': 'Test Category'
-                }
-            ]
+from gemini_only_extractor import GeminiOnlyExtractor
 
-# Import del database (opzionale per deployment semplificato)
-try:
-    from database import db_manager, ProcessingJob
-    print(f"✅ Database importato con successo. URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
-except ImportError as e:
-    print(f"❌ Errore import database: {e}")
-    print(f"❌ DATABASE_URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
-    print("Attenzione: modulo database non disponibile. Funzionalità database disabilitate.")
-    db_manager = None
-    ProcessingJob = None
-except Exception as e:
-    print(f"❌ Errore generico durante import database: {e}")
-    print(f"❌ DATABASE_URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
-    db_manager = None
-    ProcessingJob = None
+# Import del database
+from database import db_manager, ProcessingJob
+print(f"✅ Database importato con successo. URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
 
 app = FastAPI(
     title=API_CONFIG["title"],
@@ -178,24 +151,16 @@ async def root():
 async def health_check():
     """Controllo stato del servizio"""
     try:
-        if db_manager:
-            db_stats = db_manager.get_stats()
-            return {
-                "status": "healthy",
-                "timestamp": datetime.now().isoformat(),
-                "database": "connected",
-                "active_jobs": db_stats["active_jobs"],
-                "completed_jobs": db_stats["completed_jobs"],
-                "total_jobs": db_stats["total_jobs"],
-                "total_products": db_stats["total_products"]
-            }
-        else:
-            return {
-                "status": "healthy",
-                "timestamp": datetime.now().isoformat(),
-                "database": "not_configured",
-                "message": "Database non configurato, funzionalità limitate"
-            }
+        db_stats = db_manager.get_stats()
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "database": "connected",
+            "active_jobs": db_stats["active_jobs"],
+            "completed_jobs": db_stats["completed_jobs"],
+            "total_jobs": db_stats["total_jobs"],
+            "total_products": db_stats["total_products"]
+        }
     except Exception as e:
         return {
             "status": "degraded",
@@ -209,16 +174,14 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
     try:
         logger.info(f"🚀 Avvio elaborazione ottimizzata per job {job_id}")
         
-        # Aggiorna stato a "processing" nel database (se disponibile)
-        if db_manager:
-            db_manager.update_job_status(job_id, "processing", progress=10, message="Elaborazione in corso...")
+        # Aggiorna stato a "processing" nel database
+        db_manager.update_job_status(job_id, "processing", progress=10, message="Elaborazione in corso...")
         
         start_time = datetime.now()
         
         # Elabora il volantino usando GeminiOnlyExtractor con ottimizzazioni
         logger.info(f"Inizio elaborazione volantino: {file_path}")
-        if db_manager:
-            db_manager.update_job_status(job_id, "processing", progress=30, message="Analisi PDF con Gemini...")
+        db_manager.update_job_status(job_id, "processing", progress=30, message="Analisi PDF con Gemini...")
         
         # Inizializza GeminiOnlyExtractor con supporto doppia chiave
         gemini_key_1 = os.getenv('GEMINI_API_KEY')
@@ -240,14 +203,12 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         # Determina il tipo di sorgente (file o URL)
         source_type = "url" if file_path.startswith("http") else "file"
         
-        if db_manager:
-            db_manager.update_job_status(job_id, "processing", progress=50, message="Conversione PDF in immagini...")
+        db_manager.update_job_status(job_id, "processing", progress=50, message="Conversione PDF in immagini...")
         
         # Esegue l'estrazione
         extracted_products = extractor.run(pdf_source=file_path, source_type=source_type)
         
-        if db_manager:
-            db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati completata...")
+        db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati completata...")
         
         # I prodotti sono già nel formato corretto dal GeminiOnlyExtractor
         products = extracted_products if extracted_products else []
@@ -258,17 +219,16 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         # I prodotti sono già stati salvati nel database da GeminiOnlyExtractor
         # Il job viene aggiornato automaticamente da GeminiOnlyExtractor.run()
         # Aggiorniamo solo il processing_time se non è già stato fatto
-        if db_manager:
-            job = db_manager.get_job(job_id)
-            if job and job.status != "completed":
-                db_manager.update_job_status(
-                    job_id, 
-                    "completed", 
-                    progress=100, 
-                    message=f"Elaborazione completata. Trovati {len(products)} prodotti",
-                    processing_time=processing_time,
-                    total_products=len(products)
-                )
+        job = db_manager.get_job(job_id)
+        if job and job.status != "completed":
+            db_manager.update_job_status(
+                job_id, 
+                "completed", 
+                progress=100, 
+                message=f"Elaborazione completata. Trovati {len(products)} prodotti",
+                processing_time=processing_time,
+                total_products=len(products)
+            )
         
         logger.info(f"Job {job_id} completato con successo. Trovati {len(products)} prodotti")
         
@@ -277,14 +237,13 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         logger.error(f"Errore job {job_id}: {error_msg}")
         logger.error(traceback.format_exc())
         
-        # Segna job come fallito nel database (se disponibile)
-        if db_manager:
-            db_manager.update_job_status(
-                job_id, 
-                "failed", 
-                progress=0, 
-                message=error_msg
-            )
+        # Segna job come fallito nel database
+        db_manager.update_job_status(
+            job_id, 
+            "failed", 
+            progress=0, 
+            message=error_msg
+        )
     
     finally:
         # Cleanup del file temporaneo se configurato
@@ -340,29 +299,23 @@ async def upload_flyer(
             detail=f"Errore durante il salvataggio del file: {str(e)}"
         )
     
-    # Crea job nel database (se disponibile)
-    if db_manager:
-        job = db_manager.create_job(
-            filename=file.filename,
-            file_path=str(temp_file_path),
-            supermercato_nome=supermercato_nome
-        )
-        job_id = job.id
-        
-        # Aggiorna il file path con l'ID del job
-        final_filename = f"{job.id}_{file.filename}"
-        final_file_path = TEMP_DIR / final_filename
-        
-        # Rinomina il file con l'ID del job
-        os.rename(temp_file_path, final_file_path)
-        
-        # Aggiorna il path nel database
-        db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
-    else:
-        # Genera un job_id semplice se il database non è disponibile
-        job_id = str(uuid.uuid4())
-        final_file_path = temp_file_path
-        logger.info(f"Creato job temporaneo {job_id} per file {file.filename} (database non disponibile)")
+    # Crea job nel database
+    job = db_manager.create_job(
+        filename=file.filename,
+        file_path=str(temp_file_path),
+        supermercato_nome=supermercato_nome
+    )
+    job_id = job.id
+    
+    # Aggiorna il file path con l'ID del job
+    final_filename = f"{job.id}_{file.filename}"
+    final_file_path = TEMP_DIR / final_filename
+    
+    # Rinomina il file con l'ID del job
+    os.rename(temp_file_path, final_file_path)
+    
+    # Aggiorna il path nel database
+    db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
     
     # Avvia elaborazione in background
     background_tasks.add_task(process_flyer_async, job_id, str(final_file_path), supermercato_nome)
@@ -387,12 +340,6 @@ async def upload_flyer(
 async def get_job_status(job_id: str):
     """Ottieni lo stato di elaborazione di un job"""
     
-    if not db_manager:
-        raise HTTPException(
-            status_code=503,
-            detail="Database non disponibile. Funzionalità di tracking job disabilitata."
-        )
-    
     job = db_manager.get_job(job_id)
     
     if not job:
@@ -412,12 +359,6 @@ async def get_job_status(job_id: str):
 async def get_results(job_id: str):
     """Ottieni i risultati dell'elaborazione"""
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile. Funzionalità di recupero risultati disabilitata."
-            )
-        
         job = db_manager.get_job(job_id)
         
         if not job:
@@ -445,7 +386,7 @@ async def get_results(job_id: str):
             }
         
         # Recupera i prodotti dal database
-        products = db_manager.get_products(job_id) if db_manager else []
+        products = db_manager.get_products(job_id)
         
         return {
             "success": True,
@@ -471,11 +412,6 @@ async def get_results(job_id: str):
 async def get_products(job_id: str):
     """Ottieni solo i prodotti estratti da un job"""
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile. Funzionalità di recupero prodotti disabilitata."
-            )
         
         job = db_manager.get_job(job_id)
         
@@ -495,7 +431,7 @@ async def get_products(job_id: str):
             return []
         
         # Recupera i prodotti dal database
-        products = db_manager.get_products(job_id) if db_manager else []
+        products = db_manager.get_products(job_id)
         
         return [p.to_dict() for p in products]
         
@@ -521,13 +457,12 @@ async def process_url(
         job_id = str(uuid.uuid4())
         
         # Crea job nel database
-        if db_manager:
-            db_manager.create_job_with_id(
-                job_id=job_id,
-                filename=request.url,
-                supermercato_nome=request.supermercato_nome,
-                status="queued"
-            )
+        db_manager.create_job_with_id(
+            job_id=job_id,
+            filename=request.url,
+            supermercato_nome=request.supermercato_nome,
+            status="queued"
+        )
         
         # Avvia elaborazione in background
         background_tasks.add_task(process_url_async, job_id, request.url, request.supermercato_nome, request.job_name)
@@ -555,8 +490,7 @@ async def process_url_async(job_id: str, url: str, supermercato_nome: str, job_n
     """
     try:
         # Aggiorna status a processing
-        if db_manager:
-            db_manager.update_job_status(job_id, "processing", "Download del file in corso...")
+        db_manager.update_job_status(job_id, "processing", "Download del file in corso...")
         
         # Download del file
         response = requests.get(url, timeout=30)
@@ -575,8 +509,7 @@ async def process_url_async(job_id: str, url: str, supermercato_nome: str, job_n
         
     except Exception as e:
         logger.error(f"Errore durante elaborazione URL {url} per job {job_id}: {str(e)}")
-        if db_manager:
-            db_manager.update_job_status(job_id, "failed", f"Errore: {str(e)}")
+        db_manager.update_job_status(job_id, "failed", f"Errore: {str(e)}")
 
 @app.put("/products/{product_id}", response_model=Dict[str, Any])
 async def update_product(product_id: int, request: ProductUpdateRequest):
@@ -584,12 +517,6 @@ async def update_product(product_id: int, request: ProductUpdateRequest):
     Aggiorna un prodotto
     """
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile"
-            )
-        
         # Recupera prodotto esistente
         product = db_manager.get_product_by_id(product_id)
         if not product:
@@ -645,12 +572,6 @@ async def delete_product(product_id: int):
     Elimina un prodotto
     """
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile"
-            )
-        
         # Verifica esistenza prodotto
         product = db_manager.get_product_by_id(product_id)
         if not product:
@@ -689,12 +610,6 @@ async def delete_all_products():
     Elimina tutti i prodotti dal database
     """
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile"
-            )
-        
         # Elimina tutti i prodotti
         result = db_manager.delete_all_products()
         
@@ -725,12 +640,6 @@ async def get_products_by_supermarket():
     Ottieni tutti i prodotti organizzati per supermercato
     """
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile"
-            )
-        
         # Recupera tutti i job completati
         jobs = db_manager.get_all_jobs(limit=1000)
         
@@ -788,12 +697,6 @@ async def get_all_jobs(limit: int = 50, offset: int = 0):
     Recupera lista di tutti i jobs
     """
     try:
-        if not db_manager:
-            raise HTTPException(
-                status_code=503,
-                detail="Database non disponibile"
-            )
-        
         jobs = db_manager.get_all_jobs(limit=limit, offset=offset)
         return [job.to_dict() for job in jobs]
         
@@ -810,9 +713,6 @@ async def get_all_jobs(limit: int = 50, offset: int = 0):
 @app.post("/supermercati", response_model=SupermercatoResponse)
 async def create_supermercato(request: SupermercatoCreate):
     """Crea un nuovo supermercato"""
-    if not db_manager:
-        raise HTTPException(status_code=503, detail="Database non disponibile")
-    
     try:
         # Verifica se esiste già un supermercato con lo stesso nome
         existing = db_manager.get_supermercato_by_nome(request.nome)
@@ -837,8 +737,6 @@ async def create_supermercato(request: SupermercatoCreate):
 @app.get("/supermercati", response_model=List[SupermercatoResponse])
 async def get_supermercati():
     """Ottiene tutti i supermercati attivi"""
-    if not db_manager:
-        raise HTTPException(status_code=503, detail="Database non disponibile")
     
     try:
         supermercati = db_manager.get_all_supermercati()
@@ -850,9 +748,6 @@ async def get_supermercati():
 @app.get("/supermercati/{supermercato_id}", response_model=SupermercatoResponse)
 async def get_supermercato(supermercato_id: int):
     """Ottiene un supermercato per ID"""
-    if not db_manager:
-        raise HTTPException(status_code=503, detail="Database non disponibile")
-    
     try:
         supermercato = db_manager.get_supermercato_by_id(supermercato_id)
         if not supermercato:
@@ -868,9 +763,6 @@ async def get_supermercato(supermercato_id: int):
 @app.put("/supermercati/{supermercato_id}", response_model=SupermercatoResponse)
 async def update_supermercato(supermercato_id: int, request: SupermercatoUpdate):
     """Aggiorna un supermercato"""
-    if not db_manager:
-        raise HTTPException(status_code=503, detail="Database non disponibile")
-    
     try:
         # Verifica se il supermercato esiste
         supermercato = db_manager.get_supermercato_by_id(supermercato_id)
@@ -910,9 +802,6 @@ async def update_supermercato(supermercato_id: int, request: SupermercatoUpdate)
 @app.delete("/supermercati/{supermercato_id}", response_model=Dict[str, Any])
 async def delete_supermercato(supermercato_id: int):
     """Elimina (disattiva) un supermercato"""
-    if not db_manager:
-        raise HTTPException(status_code=503, detail="Database non disponibile")
-    
     try:
         supermercato = db_manager.get_supermercato_by_id(supermercato_id)
         if not supermercato:

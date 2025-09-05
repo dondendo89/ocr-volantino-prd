@@ -257,10 +257,6 @@ Estrai solo prodotti alimentari chiaramente visibili. Se non vedi un prezzo, scr
     
     def save_product_to_db(self, product_data):
         """Salva prodotto nel database"""
-        if not self.db_manager:
-            logger.warning("⚠️ Database manager non disponibile")
-            return False
-        
         try:
             # Prepara i dati per il database
             db_data = {
