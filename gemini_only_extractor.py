@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Estrattore SOLO Gemini AI per volantini
+Estrattore Multi-AI per volantini con fallback
+Supporta Gemini (primario), Moondream2 e Qwen2.5-VL come backup
 """
 
 import cv2
@@ -16,23 +17,127 @@ import base64
 import requests
 from io import BytesIO
 import time
+import fitz  # PyMuPDF per conversione PDF
+from urllib.parse import urlparse
+from urllib.request import urlretrieve
+from product_card_generator import ProductCardGenerator
+
+# Importazioni per AI fallback
+try:
+    from moondream_extractor import MoondreamExtractor
+    MOONDREAM_AVAILABLE = True
+except ImportError:
+    MOONDREAM_AVAILABLE = False
+    logger.warning("⚠️ Moondream non disponibile")
+
+try:
+    from qwen_extractor import QwenExtractor
+    QWEN_AVAILABLE = True
+except ImportError:
+    QWEN_AVAILABLE = False
+    logger.warning("⚠️ Qwen2.5-VL non disponibile")
 
 # Configurazione logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class GeminiOnlyExtractor:
-    def __init__(self, gemini_api_key=""):
-        logger.info("🤖 Inizializzando estrattore SOLO Gemini AI...")
+class MultiAIExtractor:
+    def __init__(self, gemini_api_key="", gemini_api_key_2=None, job_id=None, db_manager=None, enable_fallback=True, supermercato_nome="SUPERMERCATO"):
+        logger.info("🤖 Inizializzando estrattore Multi-AI con fallback...")
         
         self.gemini_api_key = gemini_api_key
+        self.gemini_api_key_2 = gemini_api_key_2 or os.getenv('GEMINI_API_KEY_2')
         self.gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_api_key}"
+        self.gemini_url_2 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key_2}" if self.gemini_api_key_2 else None
+        self.job_id = job_id
+        self.db_manager = db_manager
+        self.enable_fallback = enable_fallback
+        self.current_key_index = 0  # Per alternare tra le chiavi
+        self.api_keys = [self.gemini_api_key]
+        self.api_urls = [self.gemini_url]
+        
+        if self.gemini_api_key_2:
+            self.api_keys.append(self.gemini_api_key_2)
+            self.api_urls.append(self.gemini_url_2)
+            logger.info("✅ Configurate 2 chiavi API Gemini per ottimizzazione rate limiting")
+        else:
+            logger.info("✅ Configurata 1 chiave API Gemini")
+        
+        # Inizializza estrattori di fallback
+        self.moondream_extractor = None
+        self.qwen_extractor = None
+        
+        if enable_fallback:
+            if MOONDREAM_AVAILABLE:
+                try:
+                    self.moondream_extractor = MoondreamExtractor(job_id=job_id, db_manager=db_manager)
+                    logger.info("✅ Moondream2 inizializzato come fallback")
+                except Exception as e:
+                    logger.warning(f"⚠️ Errore inizializzazione Moondream: {e}")
+            
+            if QWEN_AVAILABLE:
+                try:
+                    self.qwen_extractor = QwenExtractor(job_id=job_id, db_manager=db_manager)
+                    logger.info("✅ Qwen2.5-VL inizializzato come fallback")
+                except Exception as e:
+                    logger.warning(f"⚠️ Errore inizializzazione Qwen: {e}")
+        
+        # Crea directory per le immagini temporanee
+        self.temp_dir = Path(f"temp_processing_{job_id}" if job_id else "temp_processing")
+        # Non eliminare la directory se esiste già per evitare di perdere le immagini
+        self.temp_dir.mkdir(exist_ok=True)
         
         # Crea directory per le immagini dei prodotti
-        self.product_images_dir = Path("gemini_only_product_images")
-        if self.product_images_dir.exists():
-            shutil.rmtree(self.product_images_dir)
+        self.product_images_dir = Path("multi_ai_product_images")
         self.product_images_dir.mkdir(exist_ok=True)
+        
+        # Inizializza il generatore di card prodotto
+        self.card_generator = ProductCardGenerator()
+        
+        # Salva il nome del supermercato
+        self.supermercato_nome = supermercato_nome
+    
+    def download_pdf_from_url(self, url):
+        """Scarica PDF da URL"""
+        try:
+            logger.info(f"📥 Scaricando PDF da URL: {url}")
+            parsed_url = urlparse(url)
+            filename = f"downloaded_pdf_{self.job_id}.pdf"
+            pdf_path = self.temp_dir / filename
+            
+            urlretrieve(url, pdf_path)
+            logger.info(f"✅ PDF scaricato: {pdf_path}")
+            return str(pdf_path)
+        except Exception as e:
+            logger.error(f"❌ Errore download PDF: {e}")
+            return None
+    
+    def convert_pdf_to_images(self, pdf_path):
+        """Converte PDF in immagini PNG"""
+        try:
+            logger.info(f"📄 Convertendo PDF in immagini: {pdf_path}")
+            doc = fitz.open(pdf_path)
+            image_paths = []
+            
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                # Aumenta la risoluzione per migliore qualità
+                mat = fitz.Matrix(2.0, 2.0)  # 2x zoom
+                pix = page.get_pixmap(matrix=mat)
+                
+                image_filename = f"page_{page_num + 1}.png"
+                image_path = self.temp_dir / image_filename
+                pix.save(str(image_path))
+                image_paths.append(str(image_path))
+                
+                logger.info(f"📸 Convertita pagina {page_num + 1}: {image_filename}")
+            
+            doc.close()
+            logger.info(f"✅ PDF convertito in {len(image_paths)} immagini")
+            return image_paths
+        except Exception as e:
+            logger.error(f"❌ Errore conversione PDF: {e}")
+            return []
     
     def image_to_base64(self, image_path):
         """Converte immagine in base64 per Gemini"""
@@ -56,6 +161,17 @@ class GeminiOnlyExtractor:
         except Exception as e:
             logger.error(f"❌ Errore conversione base64: {e}")
             return None
+    
+    def get_next_api_config(self):
+        """Ottiene la prossima configurazione API per bilanciare il carico"""
+        if len(self.api_keys) > 1:
+            self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
+        
+        current_key = self.api_keys[self.current_key_index]
+        current_url = self.api_urls[self.current_key_index]
+        
+        logger.info(f"🔄 Usando chiave API {self.current_key_index + 1}/{len(self.api_keys)}")
+        return current_key, current_url
     
     def analyze_with_gemini(self, image_path, retry_count=3):
         """Analizza immagine con Gemini AI con retry"""
@@ -114,10 +230,13 @@ Regole importanti:
                     }
                 }
                 
+                # Ottieni configurazione API corrente
+                current_key, current_url = self.get_next_api_config()
+                
                 # Chiamata API con timeout più lungo
                 headers = {'Content-Type': 'application/json'}
                 response = requests.post(
-                    self.gemini_url, 
+                    current_url, 
                     json=payload, 
                     headers=headers, 
                     timeout=120  # 2 minuti di timeout
@@ -152,11 +271,18 @@ Regole importanti:
                                 return None
                             continue
                 elif response.status_code == 429:
-                    # Rate limit - aspetta prima di riprovare
-                    wait_time = (attempt + 1) * 10
-                    logger.warning(f"⏳ Rate limit raggiunto, aspetto {wait_time} secondi...")
-                    time.sleep(wait_time)
-                    continue
+                    # Rate limit - gestione intelligente con più chiavi
+                    if len(self.api_keys) > 1:
+                        # Se abbiamo più chiavi, prova con la prossima invece di aspettare
+                        logger.warning(f"⏳ Rate limit su chiave {self.current_key_index + 1}, cambio chiave...")
+                        current_key, current_url = self.get_next_api_config()
+                        continue
+                    else:
+                        # Se abbiamo solo una chiave, usa exponential backoff
+                        wait_time = min(5 * (2 ** attempt), 30)  # Ridotto: max 30s invece di 60s
+                        logger.warning(f"⏳ Rate limit raggiunto, aspetto {wait_time} secondi...")
+                        time.sleep(wait_time)
+                        continue
                 else:
                     logger.error(f"❌ Errore API Gemini: {response.status_code} - {response.text[:200]}")
                     if attempt == retry_count - 1:
@@ -180,8 +306,32 @@ Regole importanti:
         
         return None
     
-    def save_product_image(self, image_path, product_info, image_name, region_id):
-        """Salva immagine del prodotto (copia dell'originale ridimensionata)"""
+    def save_product_image(self, image_path, product_info, image_name, region_id, supermercato_nome="SUPERMERCATO"):
+        """Salva immagine del prodotto come card strutturata"""
+        try:
+            # Genera e salva la card prodotto professionale
+            card_path = self.card_generator.save_product_card(
+                product_info=product_info,
+                original_image_path=image_path,
+                output_dir=self.product_images_dir,
+                image_name=image_name,
+                region_id=region_id,
+                supermercato_nome=supermercato_nome
+            )
+            
+            if card_path:
+                logger.info(f"💾 Card prodotto salvata: {Path(card_path).name}")
+                return card_path
+            else:
+                # Fallback al metodo originale se la card fallisce
+                return self._save_original_image_fallback(image_path, product_info, image_name, region_id)
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Errore generazione card, uso fallback: {e}")
+            return self._save_original_image_fallback(image_path, product_info, image_name, region_id)
+    
+    def _save_original_image_fallback(self, image_path, product_info, image_name, region_id):
+        """Metodo fallback per salvare l'immagine originale ridimensionata"""
         try:
             product_name = product_info.get('nome', 'prodotto_sconosciuto')
             # Pulisci il nome per il filesystem
@@ -204,114 +354,262 @@ Regole importanti:
                 # Salva con qualità ottimizzata
                 img.save(filepath, 'JPEG', quality=85, optimize=True)
             
-            logger.info(f"💾 Salvata: {filename}")
+            logger.info(f"💾 Salvata (fallback): {filename}")
             return str(filepath)
         except Exception as e:
-            logger.warning(f"⚠️ Errore salvataggio: {e}")
+            logger.warning(f"⚠️ Errore salvataggio fallback: {e}")
             return None
     
+    def convert_price_to_float(self, price_value):
+        """Converte un prezzo dal formato italiano al float"""
+        if price_value is None:
+            return None
+        if isinstance(price_value, (int, float)):
+            return float(price_value)
+        if isinstance(price_value, str):
+            # Rimuovi spazi e sostituisci virgola con punto
+            price_str = price_value.strip().replace(',', '.')
+            try:
+                return float(price_str)
+            except ValueError:
+                logger.warning(f"Impossibile convertire prezzo: {price_value}")
+                return None
+        return None
+
+    def save_product_to_db(self, product_data):
+        """Salva prodotto nel database"""
+        logger.info(f"🔍 DEBUG: save_product_to_db chiamato per: {product_data.get('nome', 'NOME_MANCANTE')}")
+        logger.info(f"🔍 DEBUG: db_manager presente: {self.db_manager is not None}")
+        logger.info(f"🔍 DEBUG: job_id presente: {self.job_id}")
+        
+        try:
+            if self.db_manager and self.job_id:
+                logger.info(f"🔍 DEBUG: Preparando dati per il database...")
+                # Converte i prezzi dal formato italiano
+                prezzo_originale_float = self.convert_price_to_float(product_data.get('prezzo_originale'))
+                
+                # Prepara i dati nel formato richiesto dal database
+                db_product_data = {
+                    'nome': product_data.get('nome', ''),
+                    'prezzo': product_data.get('prezzo'),
+                    'prezzo_originale': prezzo_originale_float,  # Ora è un float
+                    'marca': product_data.get('marca', ''),
+                    'categoria': product_data.get('categoria', ''),
+                    'quantita': product_data.get('tipo_prodotto', ''),  # Usa tipo_prodotto come quantità
+                    'confidence_score': 0.95  # Score di default
+                }
+                logger.info(f"🔍 DEBUG: Dati preparati: {db_product_data}")
+                
+                # Usa save_products che si aspetta una lista
+                logger.info(f"🔍 DEBUG: Chiamando db_manager.save_products...")
+                products = self.db_manager.save_products(self.job_id, [db_product_data])
+                logger.info(f"🔍 DEBUG: Risultato save_products: {len(products) if products else 0} prodotti")
+                
+                if products:
+                    logger.info(f"💾 Prodotto salvato nel DB: {product_data['nome']}")
+                    logger.info(f"✅ DEBUG: Prodotto salvato con successo")
+                    return True
+                else:
+                    logger.info(f"❌ DEBUG: save_products ha restituito lista vuota")
+            else:
+                logger.info(f"❌ DEBUG: Condizioni non soddisfatte - db_manager: {self.db_manager is not None}, job_id: {self.job_id}")
+        except Exception as e:
+            logger.error(f"❌ Errore salvataggio DB: {e}")
+            logger.error(f"❌ DEBUG: Eccezione durante salvataggio: {e}")
+        
+        logger.info(f"❌ DEBUG: save_product_to_db restituisce False")
+        return False
+    
     def process_image(self, image_path):
-        """Elabora una singola immagine con SOLO Gemini"""
+        """Elabora una singola immagine con Multi-AI e fallback"""
         logger.info(f"📸 Elaborando: {Path(image_path).name}")
         
         try:
             image_name = Path(image_path).stem
             results = []
             
-            # Analisi con Gemini AI
+            # Tentativo 1: Analisi con Gemini AI (primario)
+            logger.info("🤖 Tentativo con Gemini AI (primario)...")
             gemini_result = self.analyze_with_gemini(image_path)
             
-            if gemini_result and 'prodotti' in gemini_result:
-                logger.info(f"🤖 Gemini ha trovato {len(gemini_result['prodotti'])} prodotti")
-                
-                for i, prodotto in enumerate(gemini_result['prodotti']):
-                    # Pulisci e valida i dati
-                    nome = prodotto.get('nome', 'Prodotto sconosciuto')
-                    marca = prodotto.get('marca', 'Non identificata')
-                    categoria = prodotto.get('categoria', 'Non specificata')
-                    prezzo_str = prodotto.get('prezzo', 'Non visibile')
-                    descrizione = prodotto.get('descrizione', '')
-                    
-                    # Estrai prezzo numerico
-                    prezzo = None
-                    if prezzo_str and prezzo_str != 'Non visibile':
-                        import re
-                        price_match = re.search(r'(\d+[.,]\d{1,2}|\d+)', str(prezzo_str))
-                        if price_match:
-                            try:
-                                prezzo = float(price_match.group(1).replace(',', '.'))
-                            except ValueError:
-                                prezzo = None
-                    
-                    # Salva immagine del prodotto
-                    image_path_saved = self.save_product_image(image_path, prodotto, image_name, i)
-                    
-                    result = {
-                        'nome': nome,
-                        'marca': marca,
-                        'categoria': categoria,
-                        'tipo_prodotto': nome.split()[-1] if nome else 'Sconosciuto',
-                        'prezzo': prezzo,
-                        'prezzo_originale': prezzo_str,
-                        'descrizione': descrizione,
-                        'fonte': 'Gemini AI',
-                        'immagine_prodotto': image_path_saved or 'Non disponibile',
-                        'immagine_originale': str(image_path)
-                    }
-                    
-                    results.append(result)
-            else:
-                logger.warning(f"⚠️ Gemini non ha trovato prodotti in {Path(image_path).name}")
+            if gemini_result and 'prodotti' in gemini_result and len(gemini_result['prodotti']) > 0:
+                logger.info(f"✅ Gemini ha trovato {len(gemini_result['prodotti'])} prodotti")
+                return self._process_ai_result(gemini_result, image_path, image_name, 'Gemini AI')
             
-            logger.info(f"🛒 Totale prodotti estratti: {len(results)}")
-            return results
+            # Fallback 1: Moondream2 se Gemini fallisce
+            if self.enable_fallback and self.moondream_extractor:
+                logger.warning("⚠️ Gemini non ha trovato prodotti, tentativo con Moondream2...")
+                try:
+                    moondream_results = self.moondream_extractor.process_image(image_path)
+                    if moondream_results and len(moondream_results) > 0:
+                        logger.info(f"✅ Moondream2 ha trovato {len(moondream_results)} prodotti")
+                        return moondream_results
+                except Exception as e:
+                    logger.error(f"❌ Errore Moondream2: {e}")
+            
+            # Fallback 2: Qwen2.5-VL se anche Moondream fallisce
+            if self.enable_fallback and self.qwen_extractor:
+                logger.warning("⚠️ Moondream2 non disponibile/fallito, tentativo con Qwen2.5-VL...")
+                try:
+                    qwen_results = self.qwen_extractor.process_image(image_path)
+                    if qwen_results and len(qwen_results) > 0:
+                        logger.info(f"✅ Qwen2.5-VL ha trovato {len(qwen_results)} prodotti")
+                        return qwen_results
+                except Exception as e:
+                    logger.error(f"❌ Errore Qwen2.5-VL: {e}")
+            
+            # Se tutti i metodi falliscono
+            logger.error(f"❌ Tutti i metodi AI hanno fallito per {Path(image_path).name}")
+            return []
             
         except Exception as e:
             logger.error(f"❌ Errore elaborazione {image_path}: {e}")
             return []
     
-    def run(self):
-        """Esegue l'estrazione su tutte le immagini"""
-        logger.info("🚀 Avvio estrazione SOLO Gemini AI...")
+    def _process_ai_result(self, ai_result, image_path, image_name, ai_source):
+        """Processa il risultato di un'AI e restituisce la lista di prodotti"""
+        results = []
         
-        # Trova immagini
-        image_dir = Path('output')
-        image_files = list(image_dir.glob('page_*.png'))[:2]  # Prime 2 immagini per test
+        if ai_result and 'prodotti' in ai_result:
+            logger.info(f"🤖 {ai_source} ha trovato {len(ai_result['prodotti'])} prodotti")
+            
+            for i, prodotto in enumerate(ai_result['prodotti']):
+                # Pulisci e valida i dati
+                nome = prodotto.get('nome', 'Prodotto sconosciuto')
+                marca = prodotto.get('marca', 'Non identificata')
+                categoria = prodotto.get('categoria', 'Non specificata')
+                prezzo_str = prodotto.get('prezzo', 'Non visibile')
+                descrizione = prodotto.get('descrizione', '')
+                
+                # Estrai prezzo numerico
+                prezzo = None
+                if prezzo_str and prezzo_str != 'Non visibile':
+                    import re
+                    price_match = re.search(r'(\d+[.,]\d{1,2}|\d+)', str(prezzo_str))
+                    if price_match:
+                        try:
+                            prezzo = float(price_match.group(1).replace(',', '.'))
+                        except ValueError:
+                            prezzo = None
+                
+                # Salva immagine del prodotto
+                image_path_saved = self.save_product_image(image_path, prodotto, image_name, i, self.supermercato_nome)
+                
+                result = {
+                    'nome': nome,
+                    'marca': marca,
+                    'categoria': categoria,
+                    'tipo_prodotto': nome.split()[-1] if nome else 'Sconosciuto',
+                    'prezzo': prezzo,
+                    'prezzo_originale': prezzo_str,
+                    'descrizione': descrizione,
+                    'fonte': ai_source,
+                    'immagine_prodotto': image_path_saved or 'Non disponibile',
+                    'immagine_originale': str(image_path)
+                }
+                
+                results.append(result)
         
-        if not image_files:
-            logger.error("❌ Nessuna immagine trovata")
-            return
+        logger.info(f"🛒 Totale prodotti estratti da {ai_source}: {len(results)}")
+        return results
+    
+    def run(self, pdf_source=None, source_type="file"):
+        """Esegue l'estrazione completa con Multi-AI e fallback
         
-        logger.info(f"📁 Trovate {len(image_files)} immagini da elaborare")
+        Args:
+            pdf_source: Path del file PDF o URL del PDF
+            source_type: "file" per file locale, "url" per URL
+        """
+        logger.info("🚀 Avvio estrazione Multi-AI con fallback...")
+        
+        image_paths = []
+        
+        if pdf_source:
+            # Gestione PDF da URL o file
+            if source_type == "url":
+                logger.info(f"📥 Elaborando PDF da URL: {pdf_source}")
+                pdf_path = self.download_pdf_from_url(pdf_source)
+                if not pdf_path:
+                    logger.error("❌ Impossibile scaricare PDF da URL")
+                    return []
+            else:
+                logger.info(f"📄 Elaborando PDF da file: {pdf_source}")
+                pdf_path = pdf_source
+            
+            # Converte PDF in immagini
+            image_paths = self.convert_pdf_to_images(pdf_path)
+            if not image_paths:
+                logger.error("❌ Impossibile convertire PDF in immagini")
+                return []
+        else:
+            # Modalità legacy: cerca immagini PNG nella directory
+            image_dir = Path('output')
+            image_files = list(image_dir.glob('page_*.png'))
+            
+            if not image_files:
+                logger.error("❌ Nessuna immagine trovata")
+                return []
+            
+            image_paths = [str(img) for img in image_files]
+        
+        logger.info(f"📁 Trovate {len(image_paths)} immagini da elaborare")
         
         all_results = []
         
-        for i, image_file in enumerate(image_files):
-            logger.info(f"📊 Progresso: {i+1}/{len(image_files)}")
-            results = self.process_image(image_file)
-            all_results.extend(results)
+        for i, image_path in enumerate(image_paths):
+            logger.info(f"📊 Progresso: {i+1}/{len(image_paths)}")
+            results = self.process_image(image_path)
+            if results:
+                # Salva prodotti nel database se disponibile
+                for result in results:
+                    if self.save_product_to_db(result):
+                        logger.info(f"✅ Prodotto salvato: {result['nome']}")
+                
+                all_results.extend(results)
             
             # Pausa tra le immagini per evitare rate limiting
-            if i < len(image_files) - 1:
+            if i < len(image_paths) - 1:
                 logger.info("⏳ Pausa di 5 secondi tra le immagini...")
                 time.sleep(5)
         
         # Salva risultati
-        output_file = 'gemini_only_results.json'
+        output_file = f'gemini_results_{self.job_id}.json' if self.job_id else 'gemini_only_results.json'
         results_data = {
             'timestamp': datetime.now().isoformat(),
             'method': 'Gemini AI Only Extractor',
             'total_products': len(all_results),
-            'images_processed': len(image_files),
+            'images_processed': len(image_paths),
             'products': all_results
         }
         
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(results_data, f, indent=2, ensure_ascii=False)
         
+        # Cleanup directory temporanea
+        if self.temp_dir.exists() and self.job_id:
+            try:
+                shutil.rmtree(self.temp_dir)
+                logger.info(f"🧹 Cleanup completato: {self.temp_dir}")
+            except Exception as e:
+                logger.warning(f"⚠️ Errore cleanup: {e}")
+        
         logger.info(f"💾 Risultati salvati in {output_file}")
         logger.info(f"📊 Totale prodotti estratti: {len(all_results)}")
         logger.info(f"📁 Immagini prodotti salvate in: {self.product_images_dir}")
+        
+        # Aggiorna il job con il numero totale di prodotti estratti
+        if self.db_manager and self.job_id:
+            try:
+                self.db_manager.update_job_status(
+                    self.job_id, 
+                    "completed", 
+                    progress=100,
+                    total_products=len(all_results),
+                    message=f"Estrazione completata: {len(all_results)} prodotti trovati"
+                )
+                logger.info(f"✅ Job {self.job_id} aggiornato con {len(all_results)} prodotti")
+            except Exception as e:
+                logger.error(f"❌ Errore aggiornamento job: {e}")
         
         # Mostra riepilogo
         brands = set(r['marca'] for r in all_results if r['marca'] != 'Non identificata')
@@ -326,6 +624,12 @@ Regole importanti:
             for result in all_results[:3]:
                 logger.info(f"   - {result['nome']} ({result['marca']}) - {result.get('prezzo_originale', 'N/A')}")
         
+        return all_results
+        
+# Alias per compatibilità con codice esistente
+GeminiOnlyExtractor = MultiAIExtractor
+
 if __name__ == "__main__":
-    extractor = GeminiOnlyExtractor()
+    # Test del modello
+    extractor = MultiAIExtractor()
     extractor.run()

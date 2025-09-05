@@ -1,0 +1,344 @@
+{
+	"info": {
+		"_postman_id": "ocr-volantino-api-collection",
+		"name": "OCR Volantino API",
+		"description": "Collection completa per testare l'API di estrazione dati da volantini PDF\n\n**Base URL:** http://localhost:8000\n\n**Funzionalità principali:**\n- Upload e elaborazione PDF/immagini\n- Gestione supermercati\n- CRUD prodotti estratti\n- Monitoraggio job di elaborazione",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🏠 Info API",
+			"item": [
+				{
+					"name": "Root - Info API",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Endpoint di benvenuto con informazioni sull'API"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Verifica lo stato del servizio"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📄 Elaborazione PDF",
+			"item": [
+				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"type": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/path/to/your/volantino.pdf",
+									"description": "File PDF o immagine da elaborare"
+								},
+								{
+									"key": "supermercato_nome",
+									"value": "Test Supermercato",
+									"type": "text",
+									"description": "Nome del supermercato (obbligatorio)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload",
+							"host": ["{{base_url}}"],
+							"path": ["upload"]
+						},
+						"description": "Carica e processa un file PDF o immagine"
+					},
+					"response": []
+				},
+				{
+					"name": "Process URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"url\": \"https://esempio.com/volantino.pdf\",\n  \"supermercato_nome\": \"Test Supermercato\",\n  \"job_name\": \"Volantino Test\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/process-url",
+							"host": ["{{base_url}}"],
+							"path": ["process-url"]
+						},
+						"description": "Elabora un PDF da URL"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "⚙️ Gestione Job",
+			"item": [
+				{
+					"name": "Get Job Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/jobs/{{job_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["jobs", "{{job_id}}"]
+						},
+						"description": "Ottieni lo stato di elaborazione di un job"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job Results",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/results/{{job_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["results", "{{job_id}}"]
+						},
+						"description": "Ottieni i risultati completi dell'elaborazione"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/jobs?limit=50&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["jobs"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						},
+						"description": "Ottieni lista di tutti i job"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🛒 Gestione Prodotti",
+			"item": [
+				{
+					"name": "Get Products by Job",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{job_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["products", "{{job_id}}"]
+						},
+						"description": "Ottieni tutti i prodotti estratti da un job specifico"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products by Supermarket",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products-by-supermarket",
+							"host": ["{{base_url}}"],
+							"path": ["products-by-supermarket"]
+						},
+						"description": "Ottieni tutti i prodotti organizzati per supermercato"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Prodotto Aggiornato\",\n  \"prezzo\": 2.99,\n  \"marca\": \"Marca Test\",\n  \"categoria\": \"Alimentari\",\n  \"quantita\": \"500g\",\n  \"image_url\": \"https://esempio.com/immagine.jpg\",\n  \"hidden\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["products", "{{product_id}}"]
+						},
+						"description": "Aggiorna un prodotto esistente (tutti i campi sono opzionali)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["products", "{{product_id}}"]
+						},
+						"description": "Elimina un prodotto"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏪 Gestione Supermercati",
+			"item": [
+				{
+					"name": "Get All Supermercati",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/supermercati",
+							"host": ["{{base_url}}"],
+							"path": ["supermercati"]
+						},
+						"description": "Ottieni lista di tutti i supermercati"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Supermercato by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/supermercati/{{supermercato_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["supermercati", "{{supermercato_id}}"]
+						},
+						"description": "Ottieni dettagli di un supermercato specifico"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Supermercato",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Nuovo Supermercato\",\n  \"descrizione\": \"Descrizione del supermercato\",\n  \"logo_url\": \"https://esempio.com/logo.png\",\n  \"sito_web\": \"https://www.supermercato.it\",\n  \"colore_tema\": \"#3498db\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/supermercati",
+							"host": ["{{base_url}}"],
+							"path": ["supermercati"]
+						},
+						"description": "Crea un nuovo supermercato"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Supermercato",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nome\": \"Supermercato Aggiornato\",\n  \"descrizione\": \"Nuova descrizione\",\n  \"logo_url\": \"https://esempio.com/nuovo-logo.png\",\n  \"sito_web\": \"https://www.nuovo-sito.it\",\n  \"colore_tema\": \"#e74c3c\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/supermercati/{{supermercato_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["supermercati", "{{supermercato_id}}"]
+						},
+						"description": "Aggiorna un supermercato esistente"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Supermercato",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/supermercati/{{supermercato_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["supermercati", "{{supermercato_id}}"]
+						},
+						"description": "Elimina un supermercato"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"description": "URL base dell'API OCR Volantino"
+		},
+		{
+			"key": "job_id",
+			"value": "1a404d0a-6416-49b8-93c9-147208ef7e02",
+			"description": "ID di esempio di un job di elaborazione"
+		},
+		{
+			"key": "product_id",
+			"value": "1",
+			"description": "ID di esempio di un prodotto"
+		},
+		{
+			"key": "supermercato_id",
+			"value": "1",
+			"description": "ID di esempio di un supermercato"
+		}
+	]
+}

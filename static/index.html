@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Volantino - Prodotti Estratti</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #e74c3c;
+            background: #ffe6e6;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .product-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .product-meta {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .confidence-score {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .no-products {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin: 40px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 OCR Volantino</h1>
+            <p>Visualizza i prodotti estratti dai volantini</p>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <label for="jobId">Job ID:</label>
+                <input type="text" id="jobId" placeholder="Inserisci l'ID del job (es: 29e66e6b-93cb-4981-80e4-8d4c5d6003e4)" value="29e66e6b-93cb-4981-80e4-8d4c5d6003e4">
+                <button class="btn" onclick="loadProducts()">Carica Prodotti</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            ⏳ Caricamento prodotti in corso...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="products" class="products-grid"></div>
+
+        <div id="no-products" class="no-products" style="display: none;">
+            📦 Nessun prodotto trovato per questo job
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        async function loadProducts() {
+            const jobId = document.getElementById('jobId').value.trim();
+            
+            if (!jobId) {
+                showError('Inserisci un Job ID valido');
+                return;
+            }
+
+            showLoading(true);
+            hideError();
+            clearProducts();
+
+            try {
+                // Prima verifica lo stato del job
+                const jobResponse = await fetch(`${API_BASE}/jobs/${jobId}`);
+                
+                if (!jobResponse.ok) {
+                    throw new Error(`Job non trovato: ${jobResponse.status}`);
+                }
+
+                const jobData = await jobResponse.json();
+                
+                if (jobData.status !== 'completed') {
+                    throw new Error(`Job non completato. Status: ${jobData.status}`);
+                }
+
+                // Carica i prodotti
+                const productsResponse = await fetch(`${API_BASE}/products/${jobId}`);
+                
+                if (!productsResponse.ok) {
+                    throw new Error(`Errore nel caricamento prodotti: ${productsResponse.status}`);
+                }
+
+                const products = await productsResponse.json();
+                
+                showLoading(false);
+                displayProducts(products, jobData);
+                
+            } catch (error) {
+                showLoading(false);
+                showError(`Errore: ${error.message}`);
+            }
+        }
+
+        function displayProducts(products, jobData) {
+            const container = document.getElementById('products');
+            
+            if (!products || products.length === 0) {
+                document.getElementById('no-products').style.display = 'block';
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-name">${product.nome || 'Nome non disponibile'}</div>
+                        <div class="product-price">€${(product.prezzo || 0).toFixed(2)}</div>
+                    </div>
+                    
+                    <div class="product-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Marca</div>
+                            <div class="detail-value">${product.marca || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Categoria</div>
+                            <div class="detail-value">${product.categoria || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Quantità</div>
+                            <div class="detail-value">${product.quantita || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Prezzo Originale</div>
+                            <div class="detail-value">€${(product.prezzo_originale || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-meta">
+                        <div>Estratto il: ${new Date(product.extracted_at).toLocaleString('it-IT')}</div>
+                        <div style="margin-top: 5px;">
+                            Confidenza: <span class="confidence-score">${Math.round((product.confidence_score || 0) * 100)}%</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function clearProducts() {
+            document.getElementById('products').innerHTML = '';
+            document.getElementById('no-products').style.display = 'none';
+        }
+
+        // Carica automaticamente i prodotti all'avvio
+        window.addEventListener('load', () => {
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

@@ -16,13 +16,9 @@ API_CONFIG = {
 # Limiti file upload
 FILE_LIMITS = {
     "max_file_size": 10 * 1024 * 1024,  # 10MB
-    "allowed_extensions": [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"],
+    "allowed_extensions": [".pdf"],
     "allowed_mime_types": [
-        "image/jpeg",
-        "image/png",
-        "image/bmp",
-        "image/tiff",
-        "image/webp"
+        "application/pdf"
     ]
 }
 
@@ -60,7 +56,7 @@ RESPONSE_MESSAGES = {
     "processing_complete": "Elaborazione completata con successo",
     "processing_failed": "Errore durante l'elaborazione",
     "file_too_large": "Il file è troppo grande. Dimensione massima: {max_size}MB",
-    "invalid_file_type": "Il file deve essere un'immagine (JPEG, PNG, etc.)",
+    "invalid_file_type": "Il file deve essere un PDF",
     "job_not_found": "Job non trovato",
     "results_not_ready": "Elaborazione ancora in corso. Riprova tra qualche secondo.",
     "no_products_found": "Nessun prodotto trovato per questo job"
