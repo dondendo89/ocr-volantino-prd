@@ -22,6 +22,10 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from product_card_generator import ProductCardGenerator
 
+# Configurazione logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Importazioni per AI fallback
 try:
     from moondream_extractor import MoondreamExtractor
@@ -36,10 +40,6 @@ try:
 except ImportError:
     QWEN_AVAILABLE = False
     logger.warning("⚠️ Qwen2.5-VL non disponibile")
-
-# Configurazione logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 class MultiAIExtractor:
     def __init__(self, gemini_api_key="", gemini_api_key_2=None, job_id=None, db_manager=None, enable_fallback=True, supermercato_nome="SUPERMERCATO"):
