@@ -322,5 +322,4 @@ class ProductCardGenerator:
             logger.error(f"❌ Errore salvataggio card: {e}")
             return None
 
-# Alias per compatibilità
-GeminiOnlyExtractor = ProductCardGenerator
+# Alias rimosso per evitare conflitti con gemini_only_extractor.py

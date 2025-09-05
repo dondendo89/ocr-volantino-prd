@@ -30,7 +30,7 @@ try:
 except ImportError:
     print("Attenzione: modulo gemini_only_extractor non trovato. Verrà usata una funzione mock.")
     class GeminiOnlyExtractor:
-        def __init__(self, job_id=None, db_manager=None):
+        def __init__(self, gemini_api_key=None, gemini_api_key_2=None, job_id=None, db_manager=None, supermercato_nome="SUPERMERCATO", **kwargs):
             pass
         def run(self, pdf_source=None, source_type="file"):
             return [
