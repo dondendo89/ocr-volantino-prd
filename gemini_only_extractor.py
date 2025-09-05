@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 class GeminiOnlyExtractor:
-    def __init__(self, gemini_api_key="AIzaSyCkk723717D_-bBCL9EuxlF0sV6_Evjis8"):
+    def __init__(self, gemini_api_key=""):
         logger.info("🤖 Inizializzando estrattore SOLO Gemini AI...")
         
         self.gemini_api_key = gemini_api_key
