@@ -383,22 +383,36 @@ class DatabaseManager:
         finally:
             session.close()
     
-    def get_all_jobs(self, limit: int = 50, offset: int = 0) -> List[ProcessingJob]:
-        """Recupera tutti i jobs con paginazione"""
+    def get_all_jobs(self, limit: int = 50, offset: int = 0) -> List[dict]:
+        """Recupera tutti i jobs con paginazione e li restituisce come dizionari"""
         session = self.get_session()
         try:
             jobs = session.query(ProcessingJob).order_by(
                 ProcessingJob.created_at.desc()
             ).offset(offset).limit(limit).all()
             
-            # Forza il caricamento di tutti gli attributi prima di chiudere la sessione
+            # Converti in dizionari mentre la sessione è ancora attiva
+            jobs_data = []
             for job in jobs:
-                # Accedi agli attributi per forzare il caricamento
-                _ = job.id, job.filename, job.status, job.supermercato_nome
-                _ = job.created_at, job.completed_at, job.total_products
+                job_dict = {
+                    'id': job.id,
+                    'filename': job.filename,
+                    'file_path': job.file_path,
+                    'supermercato_id': job.supermercato_id,
+                    'supermercato_nome': job.supermercato_nome,
+                    'status': job.status,
+                    'progress': job.progress,
+                    'message': job.message,
+                    'created_at': job.created_at.isoformat() if job.created_at else None,
+                    'started_at': job.started_at.isoformat() if job.started_at else None,
+                    'completed_at': job.completed_at.isoformat() if job.completed_at else None,
+                    'processing_time': job.processing_time,
+                    'total_products': job.total_products
+                }
+                jobs_data.append(job_dict)
             
             session.commit()  # Commit esplicito per evitare ROLLBACK
-            return jobs
+            return jobs_data
         except Exception as e:
             session.rollback()
             print(f"Errore in get_all_jobs: {e}")

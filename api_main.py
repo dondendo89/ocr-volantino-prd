@@ -698,7 +698,7 @@ async def get_all_jobs(limit: int = 50, offset: int = 0):
     """
     try:
         jobs = db_manager.get_all_jobs(limit=limit, offset=offset)
-        return [job.to_dict() for job in jobs]
+        return jobs  # Ora get_all_jobs restituisce già una lista di dizionari
         
     except HTTPException:
         raise
