@@ -169,12 +169,26 @@ class DatabaseManager:
             print(f"🐘 Database PostgreSQL configurato")
         
         try:
-            self.engine = create_engine(
-                database_url,
-                echo=DATABASE_CONFIG["echo"],
-                pool_size=DATABASE_CONFIG.get("pool_size", 10),
-                max_overflow=DATABASE_CONFIG.get("max_overflow", 20)
-            )
+            # Parametri aggiuntivi per PostgreSQL SSL
+            engine_kwargs = {
+                "echo": DATABASE_CONFIG["echo"],
+                "pool_size": DATABASE_CONFIG.get("pool_size", 10),
+                "max_overflow": DATABASE_CONFIG.get("max_overflow", 20)
+            }
+            
+            # Aggiungi parametri SSL per PostgreSQL
+            if database_url.startswith("postgresql"):
+                engine_kwargs.update({
+                    "connect_args": {
+                        "sslmode": "require",
+                        "connect_timeout": 30,
+                        "application_name": "ocr-volantino-api"
+                    },
+                    "pool_pre_ping": True,
+                    "pool_recycle": 3600  # Ricrea connessioni ogni ora
+                })
+            
+            self.engine = create_engine(database_url, **engine_kwargs)
             print(f"✅ Engine database creato con successo")
             
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
