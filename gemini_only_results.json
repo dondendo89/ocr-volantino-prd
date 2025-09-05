@@ -1,0 +1,152 @@
+{
+  "timestamp": "2025-09-05T08:11:43.105279",
+  "method": "Gemini AI Only Extractor",
+  "total_products": 12,
+  "images_processed": 2,
+  "products": [
+    {
+      "nome": "Pasta fresca vari tipi",
+      "marca": "Divella",
+      "categoria": "Pasta",
+      "tipo_prodotto": "tipi",
+      "prezzo": 1.09,
+      "prezzo_originale": "1,09",
+      "descrizione": "500 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Pasta_fresca_vari_tipi_region_0.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Snello grancotto/fesa di tacchino al forno",
+      "marca": "Rovagnati",
+      "categoria": "Salumi",
+      "tipo_prodotto": "forno",
+      "prezzo": 1.79,
+      "prezzo_originale": "1,79",
+      "descrizione": "100 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Snello_grancottofesa_di_tacchino_al_forno_region_1.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Galbanino",
+      "marca": "Galbani",
+      "categoria": "Formaggi",
+      "tipo_prodotto": "Galbanino",
+      "prezzo": 7.39,
+      "prezzo_originale": "7,39",
+      "descrizione": "850 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Galbanino_region_2.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Yogurt magro assortiti",
+      "marca": "Yomo/Granarolo",
+      "categoria": "Latticini",
+      "tipo_prodotto": "assortiti",
+      "prezzo": 2.29,
+      "prezzo_originale": "2,29",
+      "descrizione": "8 x 125 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Yogurt_magro_assortiti_region_3.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Latte parzialmente scremato",
+      "marca": "Granarolo",
+      "categoria": "Latticini",
+      "tipo_prodotto": "scremato",
+      "prezzo": 0.99,
+      "prezzo_originale": "0,99",
+      "descrizione": "brick 1 lt",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Latte_parzialmente_scremato_region_4.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Cialde",
+      "marca": "Monachello",
+      "categoria": "Caffè",
+      "tipo_prodotto": "Cialde",
+      "prezzo": 11.49,
+      "prezzo_originale": "11,49",
+      "descrizione": "80 pz + 15 in omaggio 712 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_2_Cialde_region_5.jpg",
+      "immagine_originale": "output/page_2.png"
+    },
+    {
+      "nome": "Flauti cioccolato/latte/stracciatella",
+      "marca": "Mulino Bianco",
+      "categoria": "dolci",
+      "tipo_prodotto": "cioccolato/latte/stracciatella",
+      "prezzo": 1.79,
+      "prezzo_originale": "1,79",
+      "descrizione": "280 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Flauti_cioccolatolattestracciatella_region_0.jpg",
+      "immagine_originale": "output/page_3.png"
+    },
+    {
+      "nome": "Biscotti ricchi",
+      "marca": "Balocco",
+      "categoria": "dolci",
+      "tipo_prodotto": "ricchi",
+      "prezzo": 2.59,
+      "prezzo_originale": "2,59",
+      "descrizione": "700 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Biscotti_ricchi_region_1.jpg",
+      "immagine_originale": "output/page_3.png"
+    },
+    {
+      "nome": "Riso blond per insalate classico/pokè",
+      "marca": "Gallo",
+      "categoria": "altro",
+      "tipo_prodotto": "classico/pokè",
+      "prezzo": 1.99,
+      "prezzo_originale": "1,99",
+      "descrizione": "1 kg",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Riso_blond_per_insalate_classicopokè_region_2.jpg",
+      "immagine_originale": "output/page_3.png"
+    },
+    {
+      "nome": "Passata extrafine",
+      "marca": "Petti",
+      "categoria": "condimenti",
+      "tipo_prodotto": "extrafine",
+      "prezzo": 0.89,
+      "prezzo_originale": "0,89",
+      "descrizione": "700 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Passata_extrafine_region_3.jpg",
+      "immagine_originale": "output/page_3.png"
+    },
+    {
+      "nome": "Tonno all'olio d'oliva",
+      "marca": "Asdomar",
+      "categoria": "conserve",
+      "tipo_prodotto": "d'oliva",
+      "prezzo": 4.99,
+      "prezzo_originale": "4,99",
+      "descrizione": "6x70 g",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Tonno_allolio_doliva_region_4.jpg",
+      "immagine_originale": "output/page_3.png"
+    },
+    {
+      "nome": "Olio Extra Vergine di Oliva",
+      "marca": "Costa d'Oro",
+      "categoria": "oli",
+      "tipo_prodotto": "Oliva",
+      "prezzo": 4.49,
+      "prezzo_originale": "4,49",
+      "descrizione": "1 l",
+      "fonte": "Gemini AI",
+      "immagine_prodotto": "gemini_only_product_images/page_3_Olio_Extra_Vergine_di_Oliva_region_5.jpg",
+      "immagine_originale": "output/page_3.png"
+    }
+  ]
+}
