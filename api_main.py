@@ -647,8 +647,8 @@ async def get_products_by_supermarket():
         supermarkets = {}
         
         for job in jobs:
-            if job.status == "completed" and job.supermercato_nome:
-                supermercato = job.supermercato_nome
+            if job["status"] == "completed" and job["supermercato_nome"]:
+                supermercato = job["supermercato_nome"]
                 
                 if supermercato not in supermarkets:
                     supermarkets[supermercato] = {
@@ -659,12 +659,12 @@ async def get_products_by_supermarket():
                     }
                 
                 # Recupera prodotti per questo job
-                products = db_manager.get_products(job.id)
+                products = db_manager.get_products(job["id"])
                 
                 job_data = {
-                    "job_id": job.id,
-                    "filename": job.filename,
-                    "created_at": job.created_at.isoformat() if job.created_at else None,
+                    "job_id": job["id"],
+                    "filename": job["filename"],
+                    "created_at": job["created_at"],
                     "total_products": len(products)
                 }
                 
@@ -674,8 +674,8 @@ async def get_products_by_supermarket():
                 # Aggiungi prodotti con info del job
                 for product in products:
                     product_dict = product.to_dict()
-                    product_dict["job_filename"] = job.filename
-                    product_dict["job_created_at"] = job.created_at.isoformat() if job.created_at else None
+                    product_dict["job_filename"] = job["filename"]
+                    product_dict["job_created_at"] = job["created_at"]
                     supermarkets[supermercato]["products"].append(product_dict)
         
         return {
