@@ -25,7 +25,7 @@ from api_config import (
 )
 
 # Import del nostro modulo OCR
-from gemini_only_extractor import MultiAIExtractor as GeminiOnlyExtractor
+from simplified_gemini_extractor import SimplifiedGeminiExtractor
 
 # Import del database
 from database import db_manager, ProcessingJob
@@ -193,22 +193,20 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         logger.info(f"Inizio elaborazione volantino: {file_path}")
         db_manager.update_job_status(job_id, "processing", progress=30, message="Analisi PDF con Gemini...")
         
-        # Inizializza GeminiOnlyExtractor con supporto doppia chiave
-        gemini_key_1 = os.getenv('GEMINI_API_KEY')
-        gemini_key_2 = os.getenv('GEMINI_API_KEY_2')
+        # Inizializza SimpleGeminiExtractor (versione semplificata e stabile)
+        gemini_key = os.getenv('GEMINI_API_KEY')
         
-        extractor = GeminiOnlyExtractor(
-            gemini_api_key=gemini_key_1,
-            gemini_api_key_2=gemini_key_2,
+        if not gemini_key:
+            raise ValueError("GEMINI_API_KEY non configurata")
+        
+        extractor = SimplifiedGeminiExtractor(
+            gemini_api_key=gemini_key,
             job_id=job_id, 
             db_manager=db_manager,
             supermercato_nome=supermercato_nome
         )
         
-        if gemini_key_2:
-            logger.info(f"✅ Estrazione ottimizzata con 2 chiavi API per job {job_id}")
-        else:
-            logger.info(f"📝 Estrazione standard con 1 chiave API per job {job_id}")
+        logger.info(f"✅ Estrazione con SimplifiedGeminiExtractor per job {job_id}")
         
         # Determina il tipo di sorgente (file o URL)
         source_type = "url" if file_path.startswith("http") else "file"
