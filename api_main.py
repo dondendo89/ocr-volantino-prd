@@ -17,11 +17,22 @@ import traceback
 import requests
 import tempfile
 
+# Carica le variabili d'ambiente dal file .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ File .env caricato con successo")
+except ImportError:
+    print("⚠️ python-dotenv non installato. Installare con: pip install python-dotenv")
+except Exception as e:
+    print(f"⚠️ Errore nel caricamento .env: {e}")
+
 # Import delle configurazioni
 from api_config import (
     API_CONFIG, FILE_LIMITS, WORK_DIRS, PROCESSING_CONFIG, 
     CORS_CONFIG, RESPONSE_MESSAGES, is_allowed_file_type, 
-    get_response_message, get_max_file_size_mb
+    get_response_message, get_max_file_size_mb, get_job_url,
+    get_results_url, get_products_url, BASE_URL, IS_PRODUCTION
 )
 
 # Import del nostro modulo OCR
@@ -30,6 +41,8 @@ from simplified_gemini_extractor import SimplifiedGeminiExtractor
 # Import del database
 from database import db_manager, ProcessingJob
 print(f"✅ Database importato con successo. URL: {os.getenv('DATABASE_URL', 'NON_CONFIGURATA')}")
+print(f"🌍 Ambiente: {'PRODUZIONE' if IS_PRODUCTION else 'SVILUPPO'} - Base URL: {BASE_URL}")
+print(f"🔗 CORS Origins: {CORS_CONFIG['allow_origins']}")
 
 app = FastAPI(
     title=API_CONFIG["title"],
@@ -352,7 +365,12 @@ async def upload_flyer(
         "estimated_time": "30-60 secondi",
         "filename": file.filename,
         "file_size": file_size,
-        "optimization": optimization_status
+        "optimization": optimization_status,
+        "check_status_url": get_job_url(job_id),
+        "results_url": get_results_url(job_id),
+        "products_url": get_products_url(job_id),
+        "environment": "production" if IS_PRODUCTION else "development",
+        "base_url": BASE_URL
     }
 
 @app.get("/jobs/{job_id}", response_model=JobStatus)
@@ -489,11 +507,19 @@ async def process_url(
         logger.info(f"Job {job_id} creato per URL: {request.url}")
         
         return {
+            "success": True,
             "job_id": job_id,
             "status": "queued",
             "message": "Elaborazione avviata",
             "url": request.url,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "check_status_url": get_job_url(job_id),
+            "results_url": get_results_url(job_id),
+            "products_url": get_products_url(job_id),
+            "supermercato": request.supermercato_nome,
+            "estimated_processing_time": "2-5 minuti",
+            "environment": "production" if IS_PRODUCTION else "development",
+            "base_url": BASE_URL
         }
         
     except Exception as e:

@@ -245,9 +245,9 @@
     <div class="container">
         <div class="api-info">
             <h3>📡 Informazioni Backend</h3>
-            <p><strong>API Backend:</strong> <code>https://ocr-volantino-api.onrender.com</code></p>
-            <p><strong>Admin Dashboard:</strong> <code>https://ocr-volantino-api.onrender.com/static/admin.html</code></p>
-            <p><strong>Interfaccia Pubblica:</strong> <code>https://ocr-volantino-api.onrender.com/static/index.html</code></p>
+            <p><strong>API Backend:</strong> <code id="api-backend-url">Caricamento...</code></p>
+                <p><strong>Admin Dashboard:</strong> <code id="admin-dashboard-url">Caricamento...</code></p>
+                <p><strong>Interfaccia Pubblica:</strong> <code id="public-interface-url">Caricamento...</code></p>
         </div>
 
         <div class="dashboard-grid">
@@ -386,10 +386,18 @@
     </div>
 
     <script>
-        const API_BASE = 'https://ocr-volantino-api.onrender.com';
+        // Rileva automaticamente l'ambiente basandosi sull'URL corrente
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://ocr-volantino-api.onrender.com';
         
         // Inizializzazione pagina
         window.addEventListener('DOMContentLoaded', function() {
+            // Aggiorna gli URL nell'interfaccia
+            document.getElementById('api-backend-url').textContent = API_BASE;
+            document.getElementById('admin-dashboard-url').textContent = API_BASE + '/static/admin.html';
+            document.getElementById('public-interface-url').textContent = API_BASE + '/static/index.html';
+            
             loadSupermarketSelect();
         });
 

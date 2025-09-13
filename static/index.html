@@ -243,7 +243,10 @@
     </div>
 
     <script>
-        const API_BASE = 'https://ocr-volantino-api.onrender.com';
+        // Rileva automaticamente l'ambiente basandosi sull'URL corrente
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://ocr-volantino-api.onrender.com';
 
         async function loadProducts() {
             const jobId = document.getElementById('jobId').value.trim();

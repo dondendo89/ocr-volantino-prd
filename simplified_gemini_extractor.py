@@ -150,25 +150,21 @@ class SimplifiedGeminiExtractor:
             return False
         
         try:
-            # Prepara i dati per il database
+            # Prepara i dati per il database nel formato corretto per save_products
             db_product = {
                 'nome': product_data.get('nome_prodotto', ''),
                 'marca': product_data.get('marca', ''),
                 'categoria': product_data.get('categoria', ''),
                 'prezzo': self.convert_price_to_float(product_data.get('prezzo')),
-                'prezzo_al_kg': self.convert_price_to_float(product_data.get('prezzo_al_kg/l')),
+                'prezzo_originale': self.convert_price_to_float(product_data.get('prezzo_al_kg/l')),
                 'quantita': product_data.get('quantità', ''),
-                'descrizione': product_data.get('descrizione', ''),
-                'data_inizio_offerta': product_data.get('data_inizio_offerta'),
-                'data_fine_offerta': product_data.get('data_fine_offerta'),
-                'immagine_path': product_data.get('immagine_prodotto'),
-                'supermercato_nome': self.supermercato_nome,
-                'job_id': self.job_id
+                'image_url': product_data.get('immagine_prodotto'),
+                'confidence_score': 0.95  # Score di default
             }
             
-            # Salva nel database
-            success = self.db_manager.save_product(db_product)
-            if success:
+            # Usa save_products che si aspetta una lista
+            products = self.db_manager.save_products(self.job_id, [db_product])
+            if products and len(products) > 0:
                 self.total_products_saved += 1
                 self.log_message(f"✅ Prodotto salvato nel database: {db_product['nome']}")
                 return True

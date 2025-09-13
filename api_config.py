@@ -42,9 +42,9 @@ PROCESSING_CONFIG = {
     "enable_detailed_logging": True
 }
 
-# Configurazione CORS
+# Configurazione CORS (aggiornata dinamicamente in base all'ambiente)
 CORS_CONFIG = {
-    "allow_origins": ["*"],
+    "allow_origins": ["*"],  # Sarà aggiornato dinamicamente
     "allow_credentials": True,
     "allow_methods": ["*"],
     "allow_headers": ["*"]
@@ -115,13 +115,68 @@ def is_allowed_file_type(filename: str, content_type: str) -> bool:
     return True
 
 def get_response_message(key: str, **kwargs) -> str:
-    """Ottiene un messaggio di risposta formattato"""
+    """Ottiene un messaggio di risposta con formattazione opzionale"""
     message = RESPONSE_MESSAGES.get(key, "Messaggio non trovato")
-    return message.format(**kwargs)
+    return message.format(**kwargs) if kwargs else message
 
+def get_full_url(path: str = "") -> str:
+    """Ottiene l'URL completo per un path specifico basato sull'ambiente"""
+    return f"{BASE_URL}{path}"
+
+def get_job_url(job_id: str) -> str:
+    """Ottiene l'URL completo per un job specifico"""
+    return get_full_url(f"/jobs/{job_id}")
+
+def get_results_url(job_id: str) -> str:
+    """Ottiene l'URL completo per i risultati di un job"""
+    return get_full_url(f"/results/{job_id}")
+
+def get_products_url(job_id: str) -> str:
+    """Ottiene l'URL completo per i prodotti di un job"""
+    return get_full_url(f"/products/{job_id}")
+
+
+
+# Configurazione ambiente
 # Configurazione ambiente
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DEBUG = ENVIRONMENT == "development"
+IS_PRODUCTION = ENVIRONMENT == "production"
+
+# URL base per diversi ambienti
+BASE_URLS = {
+    "development": "http://localhost:8000",
+    "production": "https://ocr-volantino-api.onrender.com"
+}
+
+BASE_URL = BASE_URLS.get(ENVIRONMENT, BASE_URLS["development"])
+
+# Configurazione specifica per ambiente
+ENVIRONMENT_CONFIG = {
+    "development": {
+        "cors_origins": ["*"],
+        "debug_mode": True,
+        "log_level": "debug",
+        "enable_docs": True,
+        "enable_admin_panel": True
+    },
+    "production": {
+        "cors_origins": [
+            "https://ocr-volantino-api.onrender.com",
+            "http://localhost:3000",  # Per eventuali frontend locali
+            "https://localhost:3000"
+        ],
+        "debug_mode": False,
+        "log_level": "info",
+        "enable_docs": True,
+        "enable_admin_panel": True
+    }
+}
+
+CURRENT_ENV_CONFIG = ENVIRONMENT_CONFIG.get(ENVIRONMENT, ENVIRONMENT_CONFIG["development"])
+
+# Aggiorna CORS_CONFIG con le origini specifiche dell'ambiente
+CORS_CONFIG["allow_origins"] = CURRENT_ENV_CONFIG["cors_origins"]
 
 # Configurazione database
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ocr_volantino.db")
