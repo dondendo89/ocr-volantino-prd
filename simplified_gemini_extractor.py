@@ -63,7 +63,7 @@ class SimplifiedGeminiExtractor:
         """Funzione ausiliaria per stampare messaggi con timestamp."""
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         logger.info(f"[{timestamp}] {message}")
-        print(f"[{timestamp}] {message}")
+        print(f"[{timestamp}] {message}")  # Mantieni anche print per debug
     
     def get_next_api_key(self):
         """Ottiene la prossima chiave API per bilanciare il carico"""
@@ -117,10 +117,21 @@ class SimplifiedGeminiExtractor:
             
             cropped_image = page_image.crop((x_min_final, y_min_final, x_max_final, y_max_final))
             
-            image_name = f"pagina_{page_number}_prodotto_{product_index}.png"
+            # Crea nome file unico con job_id per evitare conflitti
+            image_name = f"{self.job_id}_pagina_{page_number}_prodotto_{product_index}.png"
+            
+            # Salva nell'archivio principale
             image_path = self.product_images_dir / image_name
             cropped_image.save(image_path)
+            
+            # Copia anche nella directory static/images per l'accesso web
+            static_images_dir = Path("static/images")
+            static_images_dir.mkdir(exist_ok=True)
+            static_image_path = static_images_dir / image_name
+            cropped_image.save(static_image_path)
+            
             self.log_message(f"✅ Immagine del prodotto salvata in: {image_path}")
+            self.log_message(f"✅ Immagine copiata per accesso web: {static_image_path}")
             return str(image_path)
         except Exception as e:
             self.log_message(f"❌ Errore durante il ritaglio o il salvataggio dell'immagine del prodotto: {e}")
@@ -152,18 +163,24 @@ class SimplifiedGeminiExtractor:
         try:
             # Prepara i dati per il database nel formato corretto per save_products
             db_product = {
-                'nome': product_data.get('nome_prodotto', ''),
+                'nome': product_data.get('nome', product_data.get('nome_prodotto', '')),
                 'marca': product_data.get('marca', ''),
                 'categoria': product_data.get('categoria', ''),
                 'prezzo': self.convert_price_to_float(product_data.get('prezzo')),
                 'prezzo_originale': self.convert_price_to_float(product_data.get('prezzo_al_kg/l')),
-                'quantita': product_data.get('quantità', ''),
-                'image_url': product_data.get('immagine_prodotto'),
+                'quantita': product_data.get('quantità', product_data.get('quantita', '')),
+                'image_url': product_data.get('image_url'),
+                'image_path': product_data.get('image_path'),
                 'confidence_score': 0.95  # Score di default
             }
             
             # Usa save_products che si aspetta una lista
+            self.log_message(f"🔍 DEBUG: Chiamando save_products per job_id={self.job_id}")
+            self.log_message(f"🔍 DEBUG: Supermercato: {self.supermercato_nome}")
+            self.log_message(f"🔍 DEBUG: Dati prodotto da salvare: {db_product}")
             products = self.db_manager.save_products(self.job_id, [db_product])
+            self.log_message(f"🔍 DEBUG: save_products ha restituito: {products}")
+            self.log_message(f"🔍 DEBUG: Numero prodotti restituiti: {len(products) if products else 0}")
             if products and len(products) > 0:
                 self.total_products_saved += 1
                 self.log_message(f"✅ Prodotto salvato nel database: {db_product['nome']}")
@@ -215,14 +232,28 @@ class SimplifiedGeminiExtractor:
                     if "bounding_box" in product and product["bounding_box"]:
                         image_path = self.crop_and_save_product_image(page_image, product["bounding_box"], page_number, i + 1)
                         product["immagine_prodotto"] = image_path
+                        # Aggiungi anche il path relativo per l'API
+                        if image_path:
+                            # Il path è già relativo alla directory corrente
+                            product["image_path"] = image_path
+                            product["image_url"] = f"/static/images/{Path(image_path).name}"
                         del product["bounding_box"]  # Rimuovi il campo bounding_box
                     else:
                         product["immagine_prodotto"] = None
+                        product["image_path"] = None
+                        product["image_url"] = None
                     
                     # Salva nel database
-                    if self.save_product_to_db(product):
+                    self.log_message(f"🔍 DEBUG: Struttura completa prodotto: {product}")
+                    self.log_message(f"🔍 DEBUG: Tentativo salvataggio prodotto: {product.get('nome', product.get('nome_prodotto', 'NOME_MANCANTE'))}")
+                    save_result = self.save_product_to_db(product)
+                    self.log_message(f"🔍 DEBUG: Risultato salvataggio: {save_result}")
+                    if save_result:
                         processed_products.append(product)
                         self.total_products_found += 1
+                        self.log_message(f"✅ DEBUG: Prodotto aggiunto a processed_products")
+                    else:
+                        self.log_message(f"❌ DEBUG: Prodotto NON aggiunto a processed_products")
                 
                 return {"page": page_number, "products": processed_products, "success": True, "error": None}
             else:

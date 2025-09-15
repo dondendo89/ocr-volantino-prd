@@ -67,6 +67,7 @@ class ExtractedProduct(Base):
     marca = Column(String)
     categoria = Column(String)
     image_url = Column(String)  # URL dell'immagine del prodotto
+    image_path = Column(String)  # Path locale dell'immagine del prodotto
     
     # Posizione nell'immagine
     posizione_x = Column(Integer)
@@ -102,6 +103,7 @@ class ExtractedProduct(Base):
             "marca": self.marca,
             "categoria": self.categoria,
             "image_url": self.image_url,
+            "image_path": self.image_path,
             "posizione": posizione,
             "confidence_score": self.confidence_score,
             "extracted_at": self.extracted_at.isoformat() if self.extracted_at else None,
@@ -299,6 +301,7 @@ class DatabaseManager:
                     marca=product_data.get("marca"),
                     categoria=product_data.get("categoria"),
                     image_url=product_data.get("image_url"),
+                    image_path=product_data.get("image_path"),
                     posizione_x=posizione.get("x") if posizione else None,
                     posizione_y=posizione.get("y") if posizione else None,
                     posizione_width=posizione.get("width") if posizione else None,

@@ -184,6 +184,8 @@ async def health_check():
 
 async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: str = "SUPERMERCATO"):
     """Elaborazione asincrona del volantino con ottimizzazioni"""
+    print(f"🔍 DEBUG: process_flyer_async chiamata con job_id={job_id}, file_path={file_path}, supermercato_nome={supermercato_nome}")
+    logger.info(f"🔍 DEBUG: process_flyer_async chiamata con job_id={job_id}, file_path={file_path}, supermercato_nome={supermercato_nome}")
     try:
         logger.info(f"🚀 Avvio elaborazione ottimizzata per job {job_id}")
         
@@ -208,9 +210,14 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         # Inizializza SimpleGeminiExtractor (versione semplificata e stabile)
         gemini_key = os.getenv('GEMINI_API_KEY')
+        logger.info(f"🔍 DEBUG: GEMINI_API_KEY caricata: {'Sì' if gemini_key else 'No'}")
+        print(f"🔍 DEBUG: GEMINI_API_KEY caricata: {'Sì' if gemini_key else 'No'}")
         
         if not gemini_key:
-            raise ValueError("GEMINI_API_KEY non configurata")
+            error_msg = "GEMINI_API_KEY non configurata"
+            logger.error(f"🔍 DEBUG: {error_msg}")
+            print(f"🔍 DEBUG: {error_msg}")
+            raise ValueError(error_msg)
         
         extractor = SimplifiedGeminiExtractor(
             gemini_api_key=gemini_key,
@@ -220,6 +227,9 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         )
         
         logger.info(f"✅ Estrazione con SimplifiedGeminiExtractor per job {job_id}")
+        logger.info(f"🔍 DEBUG API: File path: {file_path}")
+        logger.info(f"🔍 DEBUG API: Supermercato: {supermercato_nome}")
+        logger.info(f"🔍 DEBUG API: Job ID: {job_id}")
         
         # Determina il tipo di sorgente (file o URL)
         source_type = "url" if file_path.startswith("http") else "file"
@@ -227,12 +237,21 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         db_manager.update_job_status(job_id, "processing", progress=50, message="Conversione PDF in immagini...")
         
         # Esegue l'estrazione
-        extracted_products = extractor.run(pdf_source=file_path, source_type=source_type)
+        logger.info(f"🔍 DEBUG API: Chiamando extractor.run() con source_type={source_type}")
+        extraction_result = extractor.run(pdf_source=file_path, source_type=source_type)
+        logger.info(f"🔍 DEBUG API: extractor.run() completato. Risultato: {extraction_result}")
         
         db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati completata...")
         
-        # I prodotti sono già nel formato corretto dal GeminiOnlyExtractor
-        products = extracted_products if extracted_products else []
+        # Gestisce il risultato dell'estrazione
+        if extraction_result and extraction_result.get("success"):
+            products = extraction_result.get("products", [])
+            logger.info(f"✅ Estrazione completata: {len(products)} prodotti trovati, {extraction_result.get('products_saved', 0)} salvati nel DB")
+        else:
+            products = []
+            error_msg = extraction_result.get("error", "Errore sconosciuto") if extraction_result else "Nessun risultato"
+            logger.error(f"❌ Estrazione fallita: {error_msg}")
+            raise Exception(f"Estrazione fallita: {error_msg}")
         
         end_time = datetime.now()
         processing_time = (end_time - start_time).total_seconds()
@@ -295,6 +314,8 @@ async def upload_flyer(
 ):
     """Carica e processa un volantino"""
     
+    print("🚀 UPLOAD ENDPOINT CHIAMATO!")
+    logger.info("🚀 UPLOAD ENDPOINT CHIAMATO!")
     logger.info(f"Ricevuto upload file: {file.filename}, type: {file.content_type}")
     
     # Validazione tipo file
@@ -350,7 +371,15 @@ async def upload_flyer(
     db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
     
     # Avvia elaborazione in background
-    background_tasks.add_task(process_flyer_async, job_id, str(final_file_path), supermercato_nome)
+    logger.info(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
+    print(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
+    try:
+        background_tasks.add_task(process_flyer_async, job_id, str(final_file_path), supermercato_nome)
+        logger.info(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
+        print(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
+    except Exception as e:
+        logger.error(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
+        print(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
     
     logger.info(f"Job {job_id} creato per file {file.filename}")
     
