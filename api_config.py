@@ -179,7 +179,13 @@ CURRENT_ENV_CONFIG = ENVIRONMENT_CONFIG.get(ENVIRONMENT, ENVIRONMENT_CONFIG["dev
 CORS_CONFIG["allow_origins"] = CURRENT_ENV_CONFIG["cors_origins"]
 
 # Configurazione database
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ocr_volantino.db")
+# Configurazione specifica per Render SQLite
+if os.path.exists("/var/lib/sqlite"):
+    # Siamo su Render, usa il disco persistente
+    DATABASE_URL = "sqlite:///var/lib/sqlite/ocr_volantino.db"
+else:
+    # Ambiente locale o altra configurazione
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ocr_volantino.db")
 
 # Railway PostgreSQL URL fix (rimuove postgresql:// e aggiunge postgresql+psycopg2://)
 if DATABASE_URL.startswith("postgresql://"):

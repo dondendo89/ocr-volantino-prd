@@ -2,25 +2,18 @@ services:
   - type: web
     name: ocr-volantino-api
     env: python
-    plan: free
-    buildCommand: |
-      apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-ita poppler-utils
-      pip install -r requirements.txt
-    startCommand: gunicorn api_main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 api_main.py
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.4
       - key: ENVIRONMENT
         value: production
-      - key: SECRET_KEY
-        generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
-          name: ocr-volantino-db
-          property: connectionString
-
-databases:
-  - name: ocr-volantino-db
-    plan: free
-    databaseName: ocr_volantino
-    user: ocr_user
+        value: sqlite:///var/lib/sqlite/ocr_volantino.db
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY_2
+        sync: false
+    disk:
+      name: sqlite-disk
+      mountPath: /var/lib/sqlite
+      sizeGB: 1
