@@ -183,12 +183,19 @@ class DatabaseManager:
                 engine_kwargs["connect_args"] = DATABASE_CONFIG["connect_args"]
             elif database_url.startswith("postgresql"):
                 # Configurazione SSL di default per PostgreSQL
+                # Su Render, il database richiede SSL
+                ssl_config = {
+                    "sslmode": "require",
+                    "connect_timeout": 30,
+                    "application_name": "ocr-volantino-api"
+                }
+                
+                # Per localhost, disabilita SSL
+                if "localhost" in database_url:
+                    ssl_config["sslmode"] = "disable"
+                
                 engine_kwargs.update({
-                    "connect_args": {
-                        "sslmode": "require",
-                        "connect_timeout": 30,
-                        "application_name": "ocr-volantino-api"
-                    },
+                    "connect_args": ssl_config,
                     "pool_pre_ping": True,
                     "pool_recycle": 3600  # Ricrea connessioni ogni ora
                 })

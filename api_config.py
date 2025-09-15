@@ -198,10 +198,8 @@ else:
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-# Configurazione aggiuntiva per PostgreSQL locale
+# Configurazione SSL per PostgreSQL gestita in database.py
 connect_args = {}
-if DATABASE_URL.startswith("postgresql+psycopg2://") and "localhost" in DATABASE_URL:
-    connect_args = {"sslmode": "disable", "connect_timeout": 10}
 
 DATABASE_CONFIG = {
     "url": DATABASE_URL,
