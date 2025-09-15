@@ -178,8 +178,11 @@ class DatabaseManager:
                 "max_overflow": DATABASE_CONFIG.get("max_overflow", 20)
             }
             
-            # Aggiungi parametri SSL per PostgreSQL
-            if database_url.startswith("postgresql"):
+            # Aggiungi connect_args se presente nella configurazione
+            if "connect_args" in DATABASE_CONFIG:
+                engine_kwargs["connect_args"] = DATABASE_CONFIG["connect_args"]
+            elif database_url.startswith("postgresql"):
+                # Configurazione SSL di default per PostgreSQL
                 engine_kwargs.update({
                     "connect_args": {
                         "sslmode": "require",

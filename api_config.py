@@ -1,6 +1,13 @@
 import os
 from pathlib import Path
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# Carica le variabili d'ambiente dal file .env.local se esiste
+if os.path.exists('.env.local'):
+    load_dotenv('.env.local')
+else:
+    load_dotenv()  # Carica il file .env standard se esiste
 
 # Configurazione API
 API_CONFIG = {
@@ -191,11 +198,17 @@ else:
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
+# Configurazione aggiuntiva per PostgreSQL locale
+connect_args = {}
+if DATABASE_URL.startswith("postgresql+psycopg2://") and "localhost" in DATABASE_URL:
+    connect_args = {"sslmode": "disable", "connect_timeout": 10}
+
 DATABASE_CONFIG = {
     "url": DATABASE_URL,
     "echo": DEBUG,
     "pool_size": 10,
-    "max_overflow": 20
+    "max_overflow": 20,
+    "connect_args": connect_args
 }
 
 # Configurazione Redis (per future implementazioni)
