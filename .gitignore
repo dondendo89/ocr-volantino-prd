@@ -49,6 +49,18 @@ build/
 dist/
 *.egg-info/
 
+# Generated product images
+simplified_gemini_product_images/
+gemini_only_product_images/
+moondream_product_images/
+multi_ai_product_images/
+static/images/
+processed_images/
+
+# Temporary processing directories
+temp_processing*/
+temp_uploads/
+
 # Test files
 .pytest_cache/
 .coverage
