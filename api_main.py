@@ -194,15 +194,15 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         start_time = datetime.now()
         
-        # Timeout globale per il job (10 minuti)
+        # Timeout globale per il job (20 minuti)
         import signal
         def timeout_handler(signum, frame):
             logger.error(f"⏰ Timeout globale raggiunto per job {job_id}")
-            db_manager.update_job_status(job_id, "failed", progress=100, message="Timeout: elaborazione interrotta dopo 10 minuti")
-            raise TimeoutError("Job timeout dopo 10 minuti")
+            db_manager.update_job_status(job_id, "failed", progress=100, message="Timeout: elaborazione interrotta dopo 20 minuti")
+            raise TimeoutError("Job timeout dopo 20 minuti")
         
         signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(600)  # 10 minuti
+        signal.alarm(1200)  # 20 minuti
         
         # Elabora il volantino usando GeminiOnlyExtractor con ottimizzazioni
         logger.info(f"Inizio elaborazione volantino: {file_path}")

@@ -43,7 +43,7 @@ for dir_path in WORK_DIRS.values():
 # Configurazione elaborazione
 PROCESSING_CONFIG = {
     "max_concurrent_jobs": 5,
-    "job_timeout_seconds": 300,  # 5 minuti
+    "job_timeout_seconds": 1200,  # 20 minuti per gestire volantini complessi
     "cleanup_temp_files": True,
     "save_processed_images": False,
     "enable_detailed_logging": True
