@@ -113,9 +113,14 @@ class handler(BaseHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(response, indent=2).encode())
     
+    def do_HEAD(self):
+        # Handle HEAD requests by calling do_GET but not sending body
+        self.do_GET()
+    
     def do_OPTIONS(self):
+        # Gestisce le richieste preflight CORS
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
