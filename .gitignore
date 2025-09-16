@@ -88,3 +88,4 @@ gemini_results_*.json
 # Example and demo files
 esempio_*.py
 debug_*.py
+.vercel

@@ -44,6 +44,19 @@ print(f"✅ Database importato con successo. URL: {os.getenv('DATABASE_URL', 'NO
 print(f"🌍 Ambiente: {'PRODUZIONE' if IS_PRODUCTION else 'SVILUPPO'} - Base URL: {BASE_URL}")
 print(f"🔗 CORS Origins: {CORS_CONFIG['allow_origins']}")
 
+# Esegui migrazione automatica all'avvio
+try:
+    from auto_migration import run_auto_migration
+    print("🔧 Eseguendo migrazione automatica del database...")
+    migration_success = run_auto_migration()
+    if migration_success:
+        print("✅ Migrazione automatica completata con successo")
+    else:
+        print("⚠️ Migrazione automatica completata con alcuni avvertimenti")
+except Exception as e:
+    print(f"❌ Errore durante migrazione automatica: {e}")
+    print("⚠️ L'applicazione continuerà comunque l'avvio...")
+
 app = FastAPI(
     title=API_CONFIG["title"],
     description=API_CONFIG["description"],
