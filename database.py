@@ -6,8 +6,11 @@ from datetime import datetime, timedelta
 import uuid
 import os
 import traceback
+import time
 from typing import List, Optional
 from api_config import DATABASE_CONFIG
+from sqlalchemy.exc import OperationalError
+import psycopg2
 
 # Base per i modelli
 Base = declarative_base()
@@ -182,12 +185,15 @@ class DatabaseManager:
             if "connect_args" in DATABASE_CONFIG:
                 engine_kwargs["connect_args"] = DATABASE_CONFIG["connect_args"]
             elif database_url.startswith("postgresql"):
-                # Configurazione SSL di default per PostgreSQL
+                # Configurazione SSL robusta per PostgreSQL
                 # Su Render, il database richiede SSL
                 ssl_config = {
                     "sslmode": "require",
                     "connect_timeout": 30,
-                    "application_name": "ocr-volantino-api"
+                    "application_name": "ocr-volantino-api",
+                    "keepalives_idle": "600",
+                    "keepalives_interval": "30",
+                    "keepalives_count": "3"
                 }
                 
                 # Per localhost, disabilita SSL
@@ -197,7 +203,9 @@ class DatabaseManager:
                 engine_kwargs.update({
                     "connect_args": ssl_config,
                     "pool_pre_ping": True,
-                    "pool_recycle": 3600  # Ricrea connessioni ogni ora
+                    "pool_recycle": 1800,  # Ricrea connessioni ogni 30 minuti
+                    "pool_timeout": 60,
+                    "pool_reset_on_return": "commit"
                 })
             
             self.engine = create_engine(database_url, **engine_kwargs)
@@ -255,6 +263,12 @@ class DatabaseManager:
                          message: str = None, processing_time: float = None,
                          total_products: int = None) -> Optional[ProcessingJob]:
         """Aggiorna lo stato di un job"""
+        return self._retry_db_operation(self._update_job_status_impl, job_id, status, progress, message, processing_time, total_products)
+    
+    def _update_job_status_impl(self, job_id: str, status: str, progress: int = None, 
+                               message: str = None, processing_time: float = None,
+                               total_products: int = None) -> Optional[ProcessingJob]:
+        """Implementazione interna di update_job_status"""
         session = self.get_session()
         try:
             job = session.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
@@ -279,11 +293,19 @@ class DatabaseManager:
                 session.refresh(job)
                 return job
             return None
+        except Exception as e:
+            session.rollback()
+            print(f"Errore durante aggiornamento job: {e}")
+            raise
         finally:
             session.close()
     
     def get_job(self, job_id: str) -> Optional[ProcessingJob]:
         """Ottiene un job per ID"""
+        return self._retry_db_operation(self._get_job_impl, job_id)
+    
+    def _get_job_impl(self, job_id: str) -> Optional[ProcessingJob]:
+        """Implementazione interna di get_job"""
         session = self.get_session()
         try:
             return session.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
@@ -398,6 +420,10 @@ class DatabaseManager:
     
     def get_all_jobs(self, limit: int = 50, offset: int = 0) -> List[dict]:
         """Recupera tutti i jobs con paginazione e li restituisce come dizionari"""
+        return self._retry_db_operation(self._get_all_jobs_impl, limit, offset)
+    
+    def _get_all_jobs_impl(self, limit: int = 50, offset: int = 0) -> List[dict]:
+        """Implementazione interna di get_all_jobs"""
         session = self.get_session()
         try:
             jobs = session.query(ProcessingJob).order_by(
@@ -428,7 +454,7 @@ class DatabaseManager:
             return jobs_data
         except Exception as e:
             session.rollback()
-            print(f"Errore in get_all_jobs: {e}")
+            print(f"Errore in _get_all_jobs_impl: {e}")
             raise
         finally:
             session.close()
@@ -679,6 +705,37 @@ class DatabaseManager:
             return False
         finally:
             session.close()
+    
+    def _retry_db_operation(self, operation, *args, max_retries=3, **kwargs):
+        """Retry mechanism per operazioni database con errori SSL"""
+        last_exception = None
+        
+        for attempt in range(max_retries):
+            try:
+                return operation(*args, **kwargs)
+            except (OperationalError, psycopg2.OperationalError) as e:
+                last_exception = e
+                error_msg = str(e).lower()
+                
+                # Retry solo per errori SSL specifici
+                if any(ssl_error in error_msg for ssl_error in [
+                    'ssl error', 'decryption failed', 'bad record mac',
+                    'connection reset', 'broken pipe', 'connection lost'
+                ]):
+                    print(f"🔄 Tentativo {attempt + 1}/{max_retries} fallito per errore SSL: {e}")
+                    if attempt < max_retries - 1:
+                        time.sleep(2 ** attempt)  # Exponential backoff
+                        continue
+                
+                # Per altri errori OperationalError, non fare retry
+                raise
+            except Exception as e:
+                # Per altri tipi di errore, non fare retry
+                raise
+        
+        # Se tutti i tentativi falliscono
+        print(f"❌ Tutti i {max_retries} tentativi falliti")
+        raise last_exception
 
 # Istanza globale del database manager
 db_manager = DatabaseManager()
