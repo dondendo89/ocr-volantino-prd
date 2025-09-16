@@ -6,6 +6,20 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Admin Dashboard - OCR Volantino</title>
+    <script>
+        // Force browser to interpret as HTML if showing as text
+        if (document.contentType && document.contentType.indexOf('text/plain') !== -1) {
+            document.open();
+            document.write(document.documentElement.outerHTML);
+            document.close();
+        }
+        // Alternative approach: check if body is not rendered
+        setTimeout(function() {
+            if (!document.body || document.body.children.length === 0) {
+                location.reload();
+            }
+        }, 100);
+    </script>
     <style>
         * {
             margin: 0;
@@ -1382,6 +1396,19 @@
         window.addEventListener('load', () => {
             loadStats();
             loadSupermercati(); // Carica anche i supermercati
+        });
+
+        // Fallback finale: se il browser mostra ancora testo grezzo, forza il rendering
+        window.addEventListener('DOMContentLoaded', function() {
+            // Controlla se il browser sta mostrando il codice sorgente
+            if (document.body && document.body.innerText.includes('<!DOCTYPE html>')) {
+                // Il browser sta mostrando il codice HTML come testo
+                // Forza il reload con un header specifico
+                if (!sessionStorage.getItem('html_fix_attempted')) {
+                    sessionStorage.setItem('html_fix_attempted', 'true');
+                    window.location.href = window.location.href + '?force_html=1';
+                }
+            }
         });
     </script>
 </body>
