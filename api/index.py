@@ -55,5 +55,6 @@ async def api_status():
         "timestamp": datetime.now().isoformat()
     }
 
-# Handler per Vercel
-handler = app
+# Handler per Vercel - deve essere una funzione ASGI
+def handler(scope, receive, send):
+    return app(scope, receive, send)
