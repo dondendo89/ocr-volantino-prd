@@ -436,21 +436,32 @@ async def upload_flyer(
 @app.get("/jobs/{job_id}", response_model=JobStatus)
 async def get_job_status(job_id: str):
     """Ottieni lo stato di elaborazione di un job"""
-    
-    job = db_manager.get_job(job_id)
-    
-    if not job:
-        raise HTTPException(status_code=404, detail="Job non trovato")
-    
-    return JobStatus(
-        job_id=job.id,
-        status=job.status,
-        supermercato_nome=job.supermercato_nome,
-        progress=job.progress,
-        message=job.message,
-        created_at=job.created_at,
-        completed_at=job.completed_at
-    )
+    try:
+        logger.info(f"Richiesta stato job: {job_id}")
+        
+        job = db_manager.get_job(job_id)
+        
+        if not job:
+            logger.warning(f"Job non trovato: {job_id}")
+            raise HTTPException(status_code=404, detail="Job non trovato")
+        
+        logger.info(f"Job trovato: {job_id}, status: {job.status}")
+        
+        return JobStatus(
+            job_id=job.id,
+            status=job.status,
+            supermercato_nome=job.supermercato_nome,
+            progress=job.progress,
+            message=job.message,
+            created_at=job.created_at,
+            completed_at=job.completed_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Errore nel recupero stato job {job_id}: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Errore interno del server: {str(e)}")
 
 @app.get("/results/{job_id}", response_model=Dict[str, Any])
 async def get_results(job_id: str):
