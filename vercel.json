@@ -8,6 +8,18 @@
   ],
   "routes": [
     {
+      "src": "/admin",
+      "dest": "/static/admin.html"
+    },
+    {
+      "src": "/admin/",
+      "dest": "/static/admin.html"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "api/index.py"
     }
