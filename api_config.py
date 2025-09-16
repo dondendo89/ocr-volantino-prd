@@ -170,6 +170,7 @@ ENVIRONMENT_CONFIG = {
     "production": {
         "cors_origins": [
             "https://ocr-volantino-api.onrender.com",
+            "https://ocr-volantino-7sjg7a0ze-dondendo89s-projects.vercel.app",  # Frontend Vercel
             "http://localhost:3000",  # Per eventuali frontend locali
             "https://localhost:3000"
         ],
