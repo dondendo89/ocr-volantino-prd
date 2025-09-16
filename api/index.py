@@ -44,11 +44,6 @@ class handler(BaseHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(response, indent=2).encode())
         elif path == '/admin' or path == '/admin/':
-            # Redirect to .html extension to force proper MIME type
-            self.send_response(302)
-            self.send_header('Location', '/admin.html')
-            self.end_headers()
-        elif path == '/admin.html':
             # Serve la pagina admin
             try:
                 # Cerca il file admin.html nella directory static
