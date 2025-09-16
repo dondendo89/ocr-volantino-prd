@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
+      "src": "api/api_main.py",
       "use": "@vercel/python"
     },
     {
@@ -17,7 +17,17 @@
     },
     {
       "src": "/(.*)",
-      "dest": "api/index.py"
+      "dest": "api/api_main.py"
     }
-  ]
+  ],
+  "env": {
+    "ENVIRONMENT": "production",
+    "DATABASE_URL": "sqlite:///tmp/ocr_volantino.db",
+    "PYTHONPATH": "/var/task"
+  },
+  "functions": {
+    "api/api_main.py": {
+      "maxDuration": 30
+    }
+  }
 }

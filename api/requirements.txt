@@ -1,1 +1,24 @@
-# Nessuna dipendenza esterna richiesta - solo librerie standard Python
+# API Framework
+fastapi>=0.100.0
+uvicorn==0.22.0
+python-multipart==0.0.6
+pydantic>=2.0.0
+
+# Basic utilities
+requests==2.31.0
+python-dotenv==1.0.0
+
+# File processing
+aiofiles==23.2.1
+
+# Database
+sqlalchemy>=2.0.0
+
+# AI Libraries
+google-generativeai==0.7.2
+
+# Image processing
+Pillow>=10.0.0
+PyMuPDF>=1.23.0
+numpy>=1.24.0
+reportlab>=4.0.0
