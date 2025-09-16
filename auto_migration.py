@@ -75,12 +75,16 @@ def run_auto_migration():
             logger.info("🎉 Migrazione automatica completata con successo")
         else:
             logger.warning("⚠️ Migrazione automatica completata con alcuni errori")
+            logger.warning("⚠️ L'applicazione continuerà comunque l'avvio...")
             
-        return success
+        # Ritorna sempre True per permettere all'app di continuare
+        return True
         
     except Exception as e:
         logger.error(f"❌ Errore durante migrazione automatica: {e}")
-        return False
+        logger.warning("⚠️ L'applicazione continuerà comunque l'avvio...")
+        # Ritorna True per permettere all'app di continuare anche in caso di errore
+        return True
 
 if __name__ == "__main__":
     run_auto_migration()

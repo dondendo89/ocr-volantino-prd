@@ -53,6 +53,8 @@ try:
         print("✅ Migrazione automatica completata con successo")
     else:
         print("⚠️ Migrazione automatica completata con alcuni avvertimenti")
+except ImportError:
+    print("⚠️ Modulo auto_migration non trovato, saltando migrazione automatica")
 except Exception as e:
     print(f"❌ Errore durante migrazione automatica: {e}")
     print("⚠️ L'applicazione continuerà comunque l'avvio...")
