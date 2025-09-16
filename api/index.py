@@ -44,6 +44,11 @@ class handler(BaseHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(response, indent=2).encode())
         elif path == '/admin' or path == '/admin/':
+            # Redirect to .html extension to force proper MIME type
+            self.send_response(302)
+            self.send_header('Location', '/admin.html')
+            self.end_headers()
+        elif path == '/admin.html':
             # Serve la pagina admin
             try:
                 # Cerca il file admin.html nella directory static
@@ -70,10 +75,16 @@ class handler(BaseHTTPRequestHandler):
                     self.send_header('Pragma', 'no-cache')
                     self.send_header('Expires', '0')
                     self.send_header('Access-Control-Allow-Origin', '*')
+                    # Force HTML interpretation
+                    self.send_header('X-Frame-Options', 'SAMEORIGIN')
+                    self.send_header('Content-Security-Policy', "default-src 'self' 'unsafe-inline' 'unsafe-eval' *")
                     self.end_headers()
                     
                     with open(admin_file, 'r', encoding='utf-8') as f:
                         content = f.read()
+                        # Ensure content starts with proper DOCTYPE and has HTML structure
+                        if not content.strip().startswith('<!DOCTYPE'):
+                            content = '<!DOCTYPE html>\n' + content
                         self.wfile.write(content.encode('utf-8'))
                 else:
                     # File non trovato, restituisci errore con debug info
