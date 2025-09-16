@@ -47,24 +47,42 @@ class handler(BaseHTTPRequestHandler):
             # Serve la pagina admin
             try:
                 # Cerca il file admin.html nella directory static
-                static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
-                admin_file = os.path.join(static_dir, 'admin.html')
+                # Su Vercel, il percorso è diverso
+                possible_paths = [
+                    os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'admin.html'),
+                    os.path.join('/var/task', 'static', 'admin.html'),
+                    'static/admin.html',
+                    './static/admin.html'
+                ]
                 
-                if os.path.exists(admin_file):
+                admin_file = None
+                for path_try in possible_paths:
+                    if os.path.exists(path_try):
+                        admin_file = path_try
+                        break
+                
+                if admin_file:
                     self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Content-type', 'text/html; charset=utf-8')
+                    self.send_header('Cache-Control', 'no-cache')
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
                     
                     with open(admin_file, 'r', encoding='utf-8') as f:
-                        self.wfile.write(f.read().encode('utf-8'))
+                        content = f.read()
+                        self.wfile.write(content.encode('utf-8'))
                 else:
-                    response = {
-                        "error": "File admin.html non trovato",
-                        "path": admin_file,
-                        "timestamp": datetime.now().isoformat()
+                    # File non trovato, restituisci errore con debug info
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    error_info = {
+                        "error": "admin.html not found",
+                        "searched_paths": possible_paths,
+                        "current_dir": os.getcwd(),
+                        "file_dir": os.path.dirname(__file__)
                     }
-                    self.wfile.write(json.dumps(response, indent=2).encode())
+                    self.wfile.write(json.dumps(error_info, indent=2).encode())
             except Exception as e:
                 response = {
                     "error": f"Errore nel caricamento admin: {str(e)}",
