@@ -329,93 +329,109 @@ async def upload_flyer(
 ):
     """Carica e processa un volantino"""
     
-    print("🚀 UPLOAD ENDPOINT CHIAMATO!")
-    logger.info("🚀 UPLOAD ENDPOINT CHIAMATO!")
-    logger.info(f"Ricevuto upload file: {file.filename}, type: {file.content_type}")
-    
-    # Validazione tipo file
-    if not is_allowed_file_type(file.filename or "", file.content_type or ""):
-        raise HTTPException(
-            status_code=400, 
-            detail=get_response_message("invalid_file_type")
-        )
-    
-    # Leggi il contenuto del file per validare la dimensione
-    file_content = await file.read()
-    file_size = len(file_content)
-    
-    # Validazione dimensione file
-    if file_size > FILE_LIMITS["max_file_size"]:
-        raise HTTPException(
-            status_code=400,
-            detail=get_response_message("file_too_large", max_size=get_max_file_size_mb())
-        )
-    
-    logger.info(f"File size: {file_size} bytes")
-    
-    # Salva file temporaneo con nome temporaneo
-    temp_filename = f"temp_{uuid.uuid4()}_{file.filename}"
-    file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
-    temp_file_path = TEMP_DIR / temp_filename
-    
     try:
-        with open(temp_file_path, "wb") as buffer:
-            buffer.write(file_content)
+        print("🚀 UPLOAD ENDPOINT CHIAMATO!")
+        logger.info("🚀 UPLOAD ENDPOINT CHIAMATO!")
+        logger.info(f"Ricevuto upload file: {file.filename}, type: {file.content_type}")
+        
+        # Verifica che le directory esistano
+        for dir_name, dir_path in WORK_DIRS.items():
+            if not dir_path.exists():
+                logger.info(f"Creando directory mancante: {dir_path}")
+                dir_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Directory {dir_name}: {dir_path} (exists: {dir_path.exists()})")
+        
+        # Validazione tipo file
+        if not is_allowed_file_type(file.filename or "", file.content_type or ""):
+            raise HTTPException(
+                status_code=400, 
+                detail=get_response_message("invalid_file_type")
+            )
+        
+        # Leggi il contenuto del file per validare la dimensione
+        file_content = await file.read()
+        file_size = len(file_content)
+        
+        # Validazione dimensione file
+        if file_size > FILE_LIMITS["max_file_size"]:
+            raise HTTPException(
+                status_code=400,
+                detail=get_response_message("file_too_large", max_size=get_max_file_size_mb())
+            )
+        
+        logger.info(f"File size: {file_size} bytes")
+        
+        # Salva file temporaneo con nome temporaneo
+        temp_filename = f"temp_{uuid.uuid4()}_{file.filename}"
+        file_extension = os.path.splitext(file.filename)[1] if file.filename else '.jpg'
+        temp_file_path = TEMP_DIR / temp_filename
+        
+        try:
+            with open(temp_file_path, "wb") as buffer:
+                buffer.write(file_content)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Errore durante il salvataggio del file: {str(e)}"
+            )
+        
+        # Crea job nel database
+        job = db_manager.create_job(
+            filename=file.filename,
+            file_path=str(temp_file_path),
+            supermercato_nome=supermercato_nome
+        )
+        job_id = job.id
+        
+        # Aggiorna il file path con l'ID del job
+        final_filename = f"{job.id}_{file.filename}"
+        final_file_path = TEMP_DIR / final_filename
+        
+        # Rinomina il file con l'ID del job
+        os.rename(temp_file_path, final_file_path)
+        
+        # Aggiorna il path nel database
+        db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
+        
+        # Avvia elaborazione in background
+        logger.info(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
+        print(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
+        try:
+            background_tasks.add_task(process_flyer_async, job_id, str(final_file_path), supermercato_nome)
+            logger.info(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
+            print(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
+        except Exception as e:
+            logger.error(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
+            print(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
+        
+        logger.info(f"Job {job_id} creato per file {file.filename}")
+        
+        # Verifica se è disponibile la seconda chiave Gemini
+        optimization_status = "dual_key_enabled" if os.getenv('GEMINI_API_KEY_2') else "single_key"
+        
+        return {
+            "success": True,
+            "job_id": job_id,
+            "status": "queued",
+            "message": get_response_message("upload_success"),
+            "estimated_time": "30-60 secondi",
+            "filename": file.filename,
+            "file_size": file_size,
+            "optimization": optimization_status,
+            "check_status_url": get_job_url(job_id),
+            "results_url": get_results_url(job_id),
+            "products_url": get_products_url(job_id),
+            "environment": "production" if IS_PRODUCTION else "development",
+            "base_url": BASE_URL
+        }
+    
     except Exception as e:
+        logger.error(f"Errore nell'endpoint upload: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
-            detail=f"Errore durante il salvataggio del file: {str(e)}"
+            detail=f"Errore interno del server: {str(e)}"
         )
-    
-    # Crea job nel database
-    job = db_manager.create_job(
-        filename=file.filename,
-        file_path=str(temp_file_path),
-        supermercato_nome=supermercato_nome
-    )
-    job_id = job.id
-    
-    # Aggiorna il file path con l'ID del job
-    final_filename = f"{job.id}_{file.filename}"
-    final_file_path = TEMP_DIR / final_filename
-    
-    # Rinomina il file con l'ID del job
-    os.rename(temp_file_path, final_file_path)
-    
-    # Aggiorna il path nel database
-    db_manager.update_job_status(job.id, "queued", message="File caricato, elaborazione in coda")
-    
-    # Avvia elaborazione in background
-    logger.info(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
-    print(f"🔍 DEBUG: Aggiungendo background task per job {job_id}")
-    try:
-        background_tasks.add_task(process_flyer_async, job_id, str(final_file_path), supermercato_nome)
-        logger.info(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
-        print(f"🔍 DEBUG: Background task aggiunto con successo per job {job_id}")
-    except Exception as e:
-        logger.error(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
-        print(f"🔍 DEBUG: Errore nell'aggiungere background task: {e}")
-    
-    logger.info(f"Job {job_id} creato per file {file.filename}")
-    
-    # Verifica se è disponibile la seconda chiave Gemini
-    optimization_status = "dual_key_enabled" if os.getenv('GEMINI_API_KEY_2') else "single_key"
-    
-    return {
-        "success": True,
-        "job_id": job_id,
-        "status": "queued",
-        "message": get_response_message("upload_success"),
-        "estimated_time": "30-60 secondi",
-        "filename": file.filename,
-        "file_size": file_size,
-        "optimization": optimization_status,
-        "check_status_url": get_job_url(job_id),
-        "results_url": get_results_url(job_id),
-        "products_url": get_products_url(job_id),
-        "environment": "production" if IS_PRODUCTION else "development",
-        "base_url": BASE_URL
-    }
 
 @app.get("/jobs/{job_id}", response_model=JobStatus)
 async def get_job_status(job_id: str):
