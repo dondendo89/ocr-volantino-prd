@@ -1,1 +1,1 @@
-web: gunicorn api_main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200
+web: gunicorn api_main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200 --worker-timeout 1200 --graceful-timeout 1200

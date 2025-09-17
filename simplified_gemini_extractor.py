@@ -214,7 +214,20 @@ class SimplifiedGeminiExtractor:
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
         try:
-            raw_response = model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
+            # Configura timeout per evitare blocchi infiniti
+            import signal
+            
+            def timeout_handler(signum, frame):
+                raise TimeoutError("Timeout nella chiamata a Gemini")
+            
+            # Imposta timeout di 90 secondi per la chiamata a Gemini
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(90)
+            
+            try:
+                raw_response = model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
+            finally:
+                signal.alarm(0)  # Disabilita il timeout
             self.log_message(f"📄 Pagina {page_number}: Risposta grezza di Gemini:\n{raw_response}")
             
             match = re.search(r'\[.*\]', raw_response, re.DOTALL)
@@ -260,6 +273,8 @@ class SimplifiedGeminiExtractor:
                 return {"page": page_number, "products": [], "success": False, "error": "Nessun blocco JSON valido trovato."}
         except ResourceExhausted:
             return {"page": page_number, "products": [], "success": False, "error": "Quota di token esaurita. Attendi e riprova più tardi."}
+        except TimeoutError:
+            return {"page": page_number, "products": [], "success": False, "error": "Timeout nella chiamata a Gemini (90 secondi). La pagina verrà saltata."}
         except Exception as e:
             return {"page": page_number, "products": [], "success": False, "error": str(e)}
     
