@@ -209,15 +209,9 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         start_time = datetime.now()
         
-        # Timeout globale per il job (20 minuti)
-        import signal
-        def timeout_handler(signum, frame):
-            logger.error(f"⏰ Timeout globale raggiunto per job {job_id}")
-            db_manager.update_job_status(job_id, "failed", progress=100, message="Timeout: elaborazione interrotta dopo 20 minuti")
-            raise TimeoutError("Job timeout dopo 20 minuti")
-        
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(1200)  # 20 minuti
+        # Timeout gestito tramite asyncio invece di signal (compatibile con background tasks)
+        import asyncio
+        timeout_seconds = 1200  # 20 minuti
         
         # Elabora il volantino usando GeminiOnlyExtractor con ottimizzazioni
         logger.info(f"Inizio elaborazione volantino: {file_path}")
@@ -259,10 +253,33 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         db_manager.update_job_status(job_id, "processing", progress=50, message="Conversione PDF in immagini...")
         
-        # Esegue l'estrazione con callback di progresso
+        # Esegue l'estrazione con callback di progresso e timeout asyncio
         logger.info(f"🔍 DEBUG API: Chiamando extractor.run() con source_type={source_type}")
-        extraction_result = extractor.run(pdf_source=file_path, source_type=source_type, progress_callback=progress_callback)
-        logger.info(f"🔍 DEBUG API: extractor.run() completato. Risultato: {extraction_result}")
+        
+        # Wrapper per l'estrazione con timeout asyncio
+        async def run_extraction_with_timeout():
+            import asyncio
+            loop = asyncio.get_event_loop()
+            # Esegui l'estrazione in un thread separato per evitare blocchi
+            return await loop.run_in_executor(
+                None, 
+                extractor.run, 
+                file_path, 
+                source_type, 
+                progress_callback
+            )
+        
+        try:
+            # Timeout di 20 minuti usando asyncio.wait_for
+            extraction_result = await asyncio.wait_for(
+                run_extraction_with_timeout(), 
+                timeout=timeout_seconds
+            )
+            logger.info(f"🔍 DEBUG API: extractor.run() completato. Risultato: {extraction_result}")
+        except asyncio.TimeoutError:
+            logger.error(f"⏰ Timeout raggiunto per job {job_id} dopo {timeout_seconds} secondi")
+            db_manager.update_job_status(job_id, "failed", progress=100, message="Timeout: elaborazione interrotta dopo 20 minuti")
+            return
         
         db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati completata...")
         
@@ -295,21 +312,14 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         logger.info(f"Job {job_id} completato con successo. Trovati {len(products)} prodotti")
         
-        # Disattiva il timeout
-        signal.alarm(0)
-        
-    except TimeoutError as e:
+    except asyncio.TimeoutError as e:
         logger.error(f"⏰ Timeout job {job_id}: {str(e)}")
-        # Il job è già stato aggiornato nel timeout_handler
-        signal.alarm(0)
+        # Il job è già stato aggiornato nel blocco try
         
     except Exception as e:
         error_msg = f"Errore durante l'elaborazione: {str(e)}"
         logger.error(f"Errore job {job_id}: {error_msg}")
         logger.error(traceback.format_exc())
-        
-        # Disattiva il timeout
-        signal.alarm(0)
         
         # Segna job come fallito nel database
         db_manager.update_job_status(
