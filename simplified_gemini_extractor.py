@@ -278,7 +278,7 @@ class SimplifiedGeminiExtractor:
         except Exception as e:
             return {"page": page_number, "products": [], "success": False, "error": str(e)}
     
-    def run(self, pdf_source=None, source_type="file"):
+    def run(self, pdf_source=None, source_type="file", progress_callback=None):
         """Metodo principale per eseguire l'estrazione"""
         try:
             self.log_message("🚀 Avvio estrattore Gemini semplificato...")
@@ -308,6 +308,10 @@ class SimplifiedGeminiExtractor:
             
             self.log_message(f"Inizio elaborazione. Trovate {total_pages} pagine nel PDF.")
             
+            # Aggiorna progresso iniziale
+            if progress_callback:
+                progress_callback(55, f"Elaborazione {total_pages} pagine...")
+            
             # Prompt ottimizzato
             prompt_text = """
 Analizza attentamente questa immagine di un volantino di supermercato.
@@ -328,6 +332,7 @@ Assicurati di non tralasciare nessun prodotto visibile.
 """
             
             all_products = []
+            completed_pages = 0
             
             # Elabora le pagine in parallelo
             with ThreadPoolExecutor(max_workers=2) as executor:  # Ridotto a 2 per evitare rate limiting
@@ -335,16 +340,29 @@ Assicurati di non tralasciare nessun prodotto visibile.
                 
                 for future in as_completed(futures):
                     result = future.result()
+                    completed_pages += 1
+                    
+                    # Calcola progresso: da 55% a 90% durante l'elaborazione delle pagine
+                    progress = 55 + int((completed_pages / total_pages) * 35)
+                    
                     if result["success"]:
                         all_products.extend(result["products"])
                         self.log_message(f"✅ Pagina {result['page']}: Trovati {len(result['products'])} prodotti.")
+                        if progress_callback:
+                            progress_callback(progress, f"Pagina {result['page']}/{total_pages} completata - {len(result['products'])} prodotti trovati")
                     else:
                         self.log_message(f"❌ Pagina {result['page']}: Errore - {result['error']}")
+                        if progress_callback:
+                            progress_callback(progress, f"Pagina {result['page']}/{total_pages} - Errore: {result['error']}")
+            
+            # Aggiorna progresso finale
+            if progress_callback:
+                progress_callback(95, f"Finalizzazione... {self.total_products_found} prodotti estratti")
             
             # Aggiorna il job nel database se disponibile
             if self.db_manager and self.job_id:
                 try:
-                    self.db_manager.update_job_status(self.job_id, 'completed', total_products=self.total_products_found)
+                    self.db_manager.update_job_status(self.job_id, 'completed', progress=100, total_products=self.total_products_found, message=f"Completato! {self.total_products_found} prodotti estratti")
                     self.log_message(f"✅ Job {self.job_id} aggiornato con {self.total_products_found} prodotti")
                 except Exception as e:
                     self.log_message(f"❌ Errore aggiornamento job: {e}")

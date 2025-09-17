@@ -234,6 +234,14 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
             print(f"🔍 DEBUG: {error_msg}")
             raise ValueError(error_msg)
         
+        # Definisce callback per aggiornamenti di progresso
+        def progress_callback(progress, message):
+            try:
+                db_manager.update_job_status(job_id, "processing", progress=progress, message=message)
+                logger.info(f"📊 Progresso job {job_id}: {progress}% - {message}")
+            except Exception as e:
+                logger.error(f"❌ Errore aggiornamento progresso: {e}")
+        
         extractor = SimplifiedGeminiExtractor(
             gemini_api_key=gemini_key,
             job_id=job_id, 
@@ -251,9 +259,9 @@ async def process_flyer_async(job_id: str, file_path: str, supermercato_nome: st
         
         db_manager.update_job_status(job_id, "processing", progress=50, message="Conversione PDF in immagini...")
         
-        # Esegue l'estrazione
+        # Esegue l'estrazione con callback di progresso
         logger.info(f"🔍 DEBUG API: Chiamando extractor.run() con source_type={source_type}")
-        extraction_result = extractor.run(pdf_source=file_path, source_type=source_type)
+        extraction_result = extractor.run(pdf_source=file_path, source_type=source_type, progress_callback=progress_callback)
         logger.info(f"🔍 DEBUG API: extractor.run() completato. Risultato: {extraction_result}")
         
         db_manager.update_job_status(job_id, "processing", progress=80, message="Estrazione dati completata...")

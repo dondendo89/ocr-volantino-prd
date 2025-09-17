@@ -804,6 +804,90 @@ class DatabaseManager:
         print(f"❌ Tutti i {max_retries} tentativi falliti per errore di connessione")
         raise last_exception
 
+    def recover_stuck_jobs(self, max_age_minutes: int = 30) -> List[str]:
+        """
+        Identifica e recupera job bloccati a causa di errori SSL
+        Restituisce la lista degli ID dei job recuperati
+        """
+        def _recover_stuck_jobs_impl():
+            session = self.get_session()
+            try:
+                # Trova job in processing da più di max_age_minutes
+                cutoff_time = datetime.utcnow() - timedelta(minutes=max_age_minutes)
+                
+                stuck_jobs = session.query(ProcessingJob).filter(
+                    ProcessingJob.status == 'processing',
+                    ProcessingJob.started_at < cutoff_time,
+                    ProcessingJob.progress.between(40, 60)  # Job bloccati intorno al 50%
+                ).all()
+                
+                recovered_job_ids = []
+                
+                for job in stuck_jobs:
+                    try:
+                        # Reset del job per riavvio
+                        job.status = 'queued'
+                        job.progress = 0
+                        job.message = 'Job riavviato automaticamente dopo errore SSL'
+                        job.started_at = None
+                        
+                        session.commit()
+                        recovered_job_ids.append(job.id)
+                        
+                        print(f"🔄 Job {job.id} riavviato automaticamente (era bloccato al {job.progress}%)")
+                        
+                    except Exception as e:
+                        print(f"❌ Errore nel riavvio del job {job.id}: {e}")
+                        session.rollback()
+                        continue
+                
+                return recovered_job_ids
+                
+            except Exception as e:
+                print(f"❌ Errore nel recupero job bloccati: {e}")
+                session.rollback()
+                return []
+            finally:
+                session.close()
+        
+        return self._retry_db_operation(_recover_stuck_jobs_impl)
+    
+    def mark_job_for_retry(self, job_id: str, reason: str = "SSL error recovery") -> bool:
+        """
+        Marca un job specifico per il retry
+        """
+        def _mark_job_for_retry_impl():
+            session = self.get_session()
+            try:
+                job = session.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
+                
+                if not job:
+                    print(f"❌ Job {job_id} non trovato")
+                    return False
+                
+                if job.status not in ['processing', 'failed']:
+                    print(f"⚠️ Job {job_id} non è in stato processing o failed (stato: {job.status})")
+                    return False
+                
+                # Reset per riavvio
+                job.status = 'queued'
+                job.progress = 0
+                job.message = f'Job riavviato: {reason}'
+                job.started_at = None
+                
+                session.commit()
+                print(f"🔄 Job {job_id} marcato per retry: {reason}")
+                return True
+                
+            except Exception as e:
+                print(f"❌ Errore nel marcare job {job_id} per retry: {e}")
+                session.rollback()
+                return False
+            finally:
+                session.close()
+        
+        return self._retry_db_operation(_mark_job_for_retry_impl)
+
 # Istanza globale del database manager
 db_manager = DatabaseManager()
 
