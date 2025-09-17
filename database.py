@@ -161,6 +161,20 @@ class DatabaseManager:
     def setup_database(self):
         """Configura la connessione al database"""
         database_url = DATABASE_CONFIG["url"]
+        
+        # Per PostgreSQL, forza SSL disabilitato anche nell'URL
+        if database_url.startswith("postgresql"):
+            # Rimuovi eventuali parametri SSL esistenti e forza sslmode=disable
+            if "?" in database_url:
+                base_url, params = database_url.split("?", 1)
+                # Rimuovi parametri SSL esistenti
+                param_pairs = [p for p in params.split("&") if not p.startswith(("sslmode=", "sslcert=", "sslkey=", "sslrootcert="))]
+                param_pairs.append("sslmode=disable")
+                database_url = f"{base_url}?{'&'.join(param_pairs)}"
+            else:
+                database_url = f"{database_url}?sslmode=disable"
+            print(f"🔒 URL PostgreSQL modificato per forzare SSL disabilitato")
+        
         print(f"🔧 Configurando database con URL: {database_url[:50]}...")
         
         # Per SQLite, assicuriamoci che la directory esista
@@ -181,13 +195,17 @@ class DatabaseManager:
                 "max_overflow": DATABASE_CONFIG.get("max_overflow", 20)
             }
             
-            # Aggiungi connect_args se presente nella configurazione
-            if "connect_args" in DATABASE_CONFIG:
-                engine_kwargs["connect_args"] = DATABASE_CONFIG["connect_args"]
-            elif database_url.startswith("postgresql"):
+            # Per PostgreSQL, forza sempre la configurazione SSL personalizzata
+            if database_url.startswith("postgresql"):
                 # Configurazione PostgreSQL ottimizzata per Render
-                # Disabilitiamo SSL per evitare errori di decryption persistenti
+                # FORZA la disabilitazione SSL per evitare errori persistenti
                 ssl_config = {
+                    "sslmode": "disable",  # FORZA SSL disabilitato
+                    "sslcert": None,
+                    "sslkey": None,
+                    "sslrootcert": None,
+                    "sslcrl": None,
+                    "requiressl": "0",
                     "connect_timeout": 30,
                     "application_name": "ocr-volantino-api",
                     "keepalives_idle": "600",
@@ -196,19 +214,10 @@ class DatabaseManager:
                     "tcp_user_timeout": "30000"
                 }
                 
-                # Controlla se siamo in ambiente di produzione (Render)
                 environment = os.getenv("ENVIRONMENT", "development")
-                
-                if "localhost" in database_url or environment == "development":
-                    # Per localhost e development, disabilita SSL
-                    ssl_config["sslmode"] = "disable"
-                else:
-                    # Per Render (production), disabilita SSL per evitare errori persistenti
-                    # Render gestisce la sicurezza a livello di rete
-                    ssl_config["sslmode"] = "disable"
-                    print(f"🔒 SSL disabilitato per ambiente production (Render)")
-                
-                print(f"🔧 Configurazione SSL: {ssl_config['sslmode']}")
+                print(f"🌍 Ambiente rilevato: {environment}")
+                print(f"🔒 SSL FORZATAMENTE DISABILITATO per tutti gli ambienti PostgreSQL")
+                print(f"🔧 Configurazione SSL completa: {ssl_config}")
                 
                 engine_kwargs.update({
                     "connect_args": ssl_config,
@@ -218,6 +227,10 @@ class DatabaseManager:
                     "pool_reset_on_return": "commit",
                     "isolation_level": "AUTOCOMMIT"
                 })
+            else:
+                # Per altri database (SQLite), usa la configurazione esistente se presente
+                if "connect_args" in DATABASE_CONFIG and DATABASE_CONFIG["connect_args"]:
+                    engine_kwargs["connect_args"] = DATABASE_CONFIG["connect_args"]
             
             self.engine = create_engine(database_url, **engine_kwargs)
             print(f"✅ Engine database creato con successo")
