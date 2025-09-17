@@ -189,23 +189,33 @@ class DatabaseManager:
                 # Su Render, il database richiede SSL
                 ssl_config = {
                     "sslmode": "require",
+                    "sslcert": None,
+                    "sslkey": None,
+                    "sslrootcert": None,
+                    "sslcrl": None,
                     "connect_timeout": 30,
                     "application_name": "ocr-volantino-api",
                     "keepalives_idle": "600",
                     "keepalives_interval": "30",
-                    "keepalives_count": "3"
+                    "keepalives_count": "3",
+                    "tcp_user_timeout": "30000"
                 }
                 
                 # Per localhost, disabilita SSL
                 if "localhost" in database_url:
                     ssl_config["sslmode"] = "disable"
+                else:
+                    # Per Render e altri servizi cloud, usa prefer invece di require
+                    # per evitare errori di decryption
+                    ssl_config["sslmode"] = "prefer"
                 
                 engine_kwargs.update({
                     "connect_args": ssl_config,
                     "pool_pre_ping": True,
                     "pool_recycle": 1800,  # Ricrea connessioni ogni 30 minuti
                     "pool_timeout": 60,
-                    "pool_reset_on_return": "commit"
+                    "pool_reset_on_return": "commit",
+                    "isolation_level": "AUTOCOMMIT"
                 })
             
             self.engine = create_engine(database_url, **engine_kwargs)
@@ -217,6 +227,38 @@ class DatabaseManager:
             # Crea le tabelle
             Base.metadata.create_all(bind=self.engine)
             print(f"✅ Tabelle database create/verificate")
+        except psycopg2.OperationalError as e:
+            error_msg = str(e).lower()
+            if "ssl" in error_msg and ("decryption failed" in error_msg or "bad record mac" in error_msg):
+                print(f"🔒 Errore SSL rilevato: {e}")
+                print(f"🔒 Tentativo con sslmode=disable...")
+                # Fallback: prova senza SSL
+                try:
+                    if database_url.startswith("postgresql"):
+                        fallback_ssl_config = {
+                            "sslmode": "disable",
+                            "connect_timeout": 30,
+                            "application_name": "ocr-volantino-api"
+                        }
+                        fallback_engine_kwargs = engine_kwargs.copy()
+                        fallback_engine_kwargs["connect_args"] = fallback_ssl_config
+                        self.engine = create_engine(database_url, **fallback_engine_kwargs)
+                        print(f"✅ Connessione stabilita senza SSL")
+                        
+                        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+                        print(f"✅ SessionLocal configurato (fallback)")
+                        
+                        # Crea le tabelle
+                        Base.metadata.create_all(bind=self.engine)
+                        print(f"✅ Tabelle database create/verificate (fallback)")
+                    else:
+                        raise e
+                except Exception as fallback_e:
+                    print(f"❌ Errore anche senza SSL: {fallback_e}")
+                    raise e
+            else:
+                print(f"❌ Errore PostgreSQL: {e}")
+                raise
         except Exception as e:
             print(f"❌ Errore durante setup database: {e}")
             raise
@@ -364,6 +406,14 @@ class DatabaseManager:
         session = self.get_session()
         try:
             return session.query(ExtractedProduct).filter(ExtractedProduct.job_id == job_id).all()
+        finally:
+            session.close()
+    
+    def get_all_products(self) -> List[ExtractedProduct]:
+        """Ottiene tutti i prodotti dal database"""
+        session = self.get_session()
+        try:
+            return session.query(ExtractedProduct).all()
         finally:
             session.close()
     
