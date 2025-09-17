@@ -8,12 +8,15 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DATABASE_URL
-        value: sqlite:///var/lib/sqlite/ocr_volantino.db
+        fromDatabase:
+          name: ocr-volantino-db
+          property: connectionString
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_API_KEY_2
         sync: false
-    disk:
-      name: sqlite-disk
-      mountPath: /var/lib/sqlite
-      sizeGB: 1
+
+databases:
+  - name: ocr-volantino-db
+    databaseName: ocr_volantino
+    user: ocr_user
