@@ -3,7 +3,7 @@ services:
     name: ocr-volantino-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python3 api_main.py
+    startCommand: gunicorn api_main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200 --worker-timeout 1200 --graceful-timeout 1200
     envVars:
       - key: ENVIRONMENT
         value: production
