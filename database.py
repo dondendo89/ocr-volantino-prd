@@ -149,31 +149,42 @@ class DatabaseManager:
     def __init__(self):
         self.engine = None
         self.SessionLocal = None
-        try:
-            print("🔧 Inizializzazione DatabaseManager...")
-            self.setup_database()
-            print("✅ DatabaseManager inizializzato con successo")
-        except Exception as e:
-            print(f"❌ Errore durante inizializzazione DatabaseManager: {e}")
-            print(f"❌ Traceback: {traceback.format_exc()}")
-            raise
+        
+        # Retry mechanism per l'inizializzazione del database
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                print(f"🔧 Inizializzazione DatabaseManager... (tentativo {attempt + 1}/{max_retries})")
+                self.setup_database()
+                print("✅ DatabaseManager inizializzato con successo")
+                break
+            except (psycopg2.OperationalError, OperationalError) as e:
+                error_msg = str(e).lower()
+                if any(err in error_msg for err in ['ssl', 'connection', 'server closed', 'unexpectedly']):
+                    if attempt < max_retries - 1:
+                        wait_time = (2 ** attempt) + (attempt * 0.1)  # Backoff con jitter
+                        print(f"⚠️ Errore di connessione (tentativo {attempt + 1}): {e}")
+                        print(f"🔄 Riprovo tra {wait_time:.1f} secondi...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        print(f"❌ Errore persistente dopo {max_retries} tentativi: {e}")
+                        raise
+                else:
+                    print(f"❌ Errore non recuperabile: {e}")
+                    raise
+            except Exception as e:
+                print(f"❌ Errore durante inizializzazione DatabaseManager: {e}")
+                print(f"❌ Traceback: {traceback.format_exc()}")
+                raise
     
     def setup_database(self):
         """Configura la connessione al database"""
         database_url = DATABASE_CONFIG["url"]
         
-        # Per PostgreSQL, forza SSL disabilitato anche nell'URL
+        # Per PostgreSQL, mantieni la configurazione SSL dall'URL
         if database_url.startswith("postgresql"):
-            # Rimuovi eventuali parametri SSL esistenti e forza sslmode=disable
-            if "?" in database_url:
-                base_url, params = database_url.split("?", 1)
-                # Rimuovi parametri SSL esistenti
-                param_pairs = [p for p in params.split("&") if not p.startswith(("sslmode=", "sslcert=", "sslkey=", "sslrootcert="))]
-                param_pairs.append("sslmode=disable")
-                database_url = f"{base_url}?{'&'.join(param_pairs)}"
-            else:
-                database_url = f"{database_url}?sslmode=disable"
-            print(f"🔒 URL PostgreSQL modificato per forzare SSL disabilitato")
+            print(f"🔒 Configurazione PostgreSQL con SSL mantenuta dall'URL")
         
         print(f"🔧 Configurando database con URL: {database_url[:50]}...")
         
@@ -195,37 +206,36 @@ class DatabaseManager:
                 "max_overflow": DATABASE_CONFIG.get("max_overflow", 20)
             }
             
-            # Per PostgreSQL, forza sempre la configurazione SSL personalizzata
+            # Per PostgreSQL, configura la connessione ottimizzata
             if database_url.startswith("postgresql"):
                 # Configurazione PostgreSQL ottimizzata per Render
-                # FORZA la disabilitazione SSL per evitare errori persistenti
                 ssl_config = {
-                    "sslmode": "disable",  # FORZA SSL disabilitato
-                    "sslcert": None,
-                    "sslkey": None,
-                    "sslrootcert": None,
-                    "sslcrl": None,
-                    "requiressl": "0",
-                    "connect_timeout": 30,
+                    "connect_timeout": 60,  # Aumentato timeout di connessione
                     "application_name": "ocr-volantino-api",
-                    "keepalives_idle": "600",
-                    "keepalives_interval": "30",
-                    "keepalives_count": "3",
-                    "tcp_user_timeout": "30000"
+                    "keepalives_idle": "300",  # Ridotto per connessioni più frequenti
+                    "keepalives_interval": "10",  # Controlli più frequenti
+                    "keepalives_count": "9",  # Più tentativi prima di considerare morta la connessione
+                    "tcp_user_timeout": "60000"  # Timeout TCP più lungo
                 }
                 
                 environment = os.getenv("ENVIRONMENT", "development")
                 print(f"🌍 Ambiente rilevato: {environment}")
-                print(f"🔒 SSL FORZATAMENTE DISABILITATO per tutti gli ambienti PostgreSQL")
-                print(f"🔧 Configurazione SSL completa: {ssl_config}")
+                print(f"🔒 Configurazione SSL mantenuta dall'URL PostgreSQL")
+                print(f"🔧 Configurazione connessione: {ssl_config}")
                 
+                # Configurazione connection pooling robusta per prevenire disconnessioni
                 engine_kwargs.update({
                     "connect_args": ssl_config,
-                    "pool_pre_ping": True,
-                    "pool_recycle": 1800,  # Ricrea connessioni ogni 30 minuti
-                    "pool_timeout": 60,
+                    "pool_pre_ping": True,  # Testa connessioni prima dell'uso
+                    "pool_recycle": 900,  # Ricrea connessioni ogni 15 minuti (più frequente)
+                    "pool_timeout": 120,  # Timeout più lungo per ottenere connessioni
                     "pool_reset_on_return": "commit",
-                    "isolation_level": "AUTOCOMMIT"
+                    "pool_size": 5,  # Pool size ridotto per Render
+                    "max_overflow": 10,  # Overflow limitato
+                    "isolation_level": "AUTOCOMMIT",
+                    # Parametri aggiuntivi per stabilità
+                    "echo_pool": True,  # Debug del pool
+                    "pool_reset_on_return": "rollback"  # Reset più sicuro
                 })
             else:
                 # Per altri database (SQLite), usa la configurazione esistente se presente
@@ -656,6 +666,10 @@ class DatabaseManager:
     
     def get_all_supermercati(self) -> List[Supermercato]:
         """Ottiene tutti i supermercati con il conteggio dei job"""
+        return self._retry_db_operation(self._get_all_supermercati_impl)
+    
+    def _get_all_supermercati_impl(self) -> List[Supermercato]:
+        """Implementazione interna per get_all_supermercati con retry"""
         session = self.get_session()
         try:
             supermercati = session.query(Supermercato).filter(Supermercato.attivo == "true").order_by(Supermercato.nome).all()
@@ -741,8 +755,8 @@ class DatabaseManager:
         finally:
             session.close()
     
-    def _retry_db_operation(self, operation, *args, max_retries=3, **kwargs):
-        """Retry mechanism per operazioni database con errori SSL"""
+    def _retry_db_operation(self, operation, *args, max_retries=5, **kwargs):
+        """Retry mechanism per operazioni database con errori di connessione"""
         last_exception = None
         
         for attempt in range(max_retries):
@@ -752,24 +766,42 @@ class DatabaseManager:
                 last_exception = e
                 error_msg = str(e).lower()
                 
-                # Retry solo per errori SSL specifici
-                if any(ssl_error in error_msg for ssl_error in [
+                # Retry per errori di connessione comuni
+                if any(conn_error in error_msg for conn_error in [
                     'ssl error', 'decryption failed', 'bad record mac',
-                    'connection reset', 'broken pipe', 'connection lost'
+                    'connection reset', 'broken pipe', 'connection lost',
+                    'server closed the connection unexpectedly',
+                    'connection terminated abnormally',
+                    'connection timed out', 'connection refused',
+                    'could not connect to server', 'no connection to the server',
+                    'connection pool exhausted', 'connection checkout timeout'
                 ]):
-                    print(f"🔄 Tentativo {attempt + 1}/{max_retries} fallito per errore SSL: {e}")
+                    print(f"🔄 Tentativo {attempt + 1}/{max_retries} fallito per errore di connessione: {e}")
                     if attempt < max_retries - 1:
-                        time.sleep(2 ** attempt)  # Exponential backoff
+                        # Exponential backoff con jitter
+                        sleep_time = (2 ** attempt) + (attempt * 0.5)
+                        print(f"⏳ Attesa {sleep_time:.1f}s prima del prossimo tentativo...")
+                        time.sleep(sleep_time)
+                        
+                        # Forza la ricreazione del pool di connessioni
+                        try:
+                            self.engine.dispose()
+                            print("🔄 Pool di connessioni ricreato")
+                        except Exception as pool_error:
+                            print(f"⚠️ Errore durante ricreazione pool: {pool_error}")
+                        
                         continue
                 
                 # Per altri errori OperationalError, non fare retry
+                print(f"❌ Errore non recuperabile: {e}")
                 raise
             except Exception as e:
                 # Per altri tipi di errore, non fare retry
+                print(f"❌ Errore generico non recuperabile: {e}")
                 raise
         
         # Se tutti i tentativi falliscono
-        print(f"❌ Tutti i {max_retries} tentativi falliti")
+        print(f"❌ Tutti i {max_retries} tentativi falliti per errore di connessione")
         raise last_exception
 
 # Istanza globale del database manager

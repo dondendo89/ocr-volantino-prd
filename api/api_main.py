@@ -97,6 +97,32 @@ class JobStatus(BaseModel):
     created_at: datetime
     completed_at: Optional[datetime] = None
 
+class SupermercatoCreate(BaseModel):
+    nome: str
+    descrizione: Optional[str] = None
+    logo_url: Optional[str] = None
+    sito_web: Optional[str] = None
+    colore_tema: Optional[str] = "#3498db"
+
+class SupermercatoUpdate(BaseModel):
+    nome: Optional[str] = None
+    descrizione: Optional[str] = None
+    logo_url: Optional[str] = None
+    sito_web: Optional[str] = None
+    colore_tema: Optional[str] = None
+
+class SupermercatoResponse(BaseModel):
+    id: int
+    nome: str
+    descrizione: Optional[str] = None
+    logo_url: Optional[str] = None
+    sito_web: Optional[str] = None
+    colore_tema: str
+    attivo: str
+    created_at: datetime
+    updated_at: datetime
+    total_jobs: int
+
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
@@ -110,7 +136,11 @@ async def root():
             "/api/status": "GET - Stato dell'API",
             "/upload": "POST - Carica e processa volantino",
             "/jobs/{job_id}": "GET - Stato elaborazione",
-            "/results/{job_id}": "GET - Risultati elaborazione"
+            "/results/{job_id}": "GET - Risultati elaborazione",
+            "/prodotti": "GET - Lista tutti i prodotti",
+            "/supermercati": "GET - Lista tutti i supermercati",
+            "/supermercati/{id}": "GET - Dettagli supermercato",
+            "/supermercati": "POST - Crea nuovo supermercato"
         }
     }
 
@@ -299,6 +329,76 @@ async def get_results(job_id: str):
         )
 
 # For Vercel, we need to export the app
+# Supermercati endpoints
+@app.get("/supermercati", response_model=List[SupermercatoResponse])
+async def get_supermercati():
+    """Ottiene tutti i supermercati attivi"""
+    try:
+        supermercati = db_manager.get_all_supermercati()
+        return [SupermercatoResponse(**s.to_dict()) for s in supermercati]
+    except Exception as e:
+        logger.error(f"Errore durante recupero supermercati: {e}")
+        raise HTTPException(status_code=500, detail="Errore interno del server")
+
+@app.get("/supermercati/{supermercato_id}", response_model=SupermercatoResponse)
+async def get_supermercato(supermercato_id: int):
+    """Ottiene un supermercato per ID"""
+    try:
+        supermercato = db_manager.get_supermercato_by_id(supermercato_id)
+        if not supermercato:
+            raise HTTPException(status_code=404, detail="Supermercato non trovato")
+        
+        return SupermercatoResponse(**supermercato.to_dict())
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Errore durante recupero supermercato {supermercato_id}: {e}")
+        raise HTTPException(status_code=500, detail="Errore interno del server")
+
+@app.get("/prodotti", response_model=List[Dict[str, Any]])
+async def get_all_products():
+    """Ottieni tutti i prodotti dal database"""
+    try:
+        # Recupera tutti i prodotti dal database
+        products = db_manager.get_all_products()
+        
+        if not products:
+            return []
+        
+        return [p.to_dict() for p in products]
+        
+    except Exception as e:
+        logger.error(f"Errore durante recupero di tutti i prodotti: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Errore durante il recupero dei prodotti"
+        )
+
+@app.post("/supermercati", response_model=SupermercatoResponse)
+async def create_supermercato(request: SupermercatoCreate):
+    """Crea un nuovo supermercato"""
+    try:
+        # Verifica se il nome è già in uso
+        existing = db_manager.get_supermercato_by_nome(request.nome)
+        if existing:
+            raise HTTPException(status_code=400, detail="Nome supermercato già in uso")
+        
+        supermercato_id = db_manager.create_supermercato(
+            nome=request.nome,
+            descrizione=request.descrizione,
+            logo_url=request.logo_url,
+            sito_web=request.sito_web,
+            colore_tema=request.colore_tema
+        )
+        
+        supermercato = db_manager.get_supermercato_by_id(supermercato_id)
+        return SupermercatoResponse(**supermercato.to_dict())
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Errore durante creazione supermercato: {e}")
+        raise HTTPException(status_code=500, detail="Errore interno del server")
+
 def handler(request):
     """Vercel handler function"""
     return app
