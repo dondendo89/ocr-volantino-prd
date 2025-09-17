@@ -2,8 +2,8 @@ services:
   - type: web
     name: ocr-volantino-api
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn api_main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200 --worker-timeout 1200 --graceful-timeout 1200
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: gunicorn api_main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200 --worker-timeout 1200 --graceful-timeout 1200 --max-requests 100 --max-requests-jitter 10 --preload
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -15,6 +15,12 @@ services:
         sync: false
       - key: GEMINI_API_KEY_2
         sync: false
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: MALLOC_TRIM_THRESHOLD_
+        value: "131072"
+      - key: MALLOC_MMAP_THRESHOLD_
+        value: "131072"
 
 databases:
   - name: ocr-volantino-db

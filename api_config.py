@@ -195,9 +195,14 @@ else:
     # Ambiente locale o altra configurazione
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./ocr_volantino.db")
 
-# Railway PostgreSQL URL fix (rimuove postgresql:// e aggiunge postgresql+psycopg2://)
+# PostgreSQL URL fix per Render e altri provider
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+    
+    # Aggiungi parametri SSL per Render PostgreSQL se non presenti
+    if "sslmode" not in DATABASE_URL and "render.com" in DATABASE_URL:
+        separator = "&" if "?" in DATABASE_URL else "?"
+        DATABASE_URL += f"{separator}sslmode=require"
 
 # Configurazione SSL per PostgreSQL gestita in database.py
 connect_args = {}

@@ -208,14 +208,20 @@ class DatabaseManager:
             
             # Per PostgreSQL, configura la connessione ottimizzata
             if database_url.startswith("postgresql"):
-                # Configurazione PostgreSQL ottimizzata per Render
+                # Configurazione PostgreSQL ottimizzata per Render con SSL
                 ssl_config = {
                     "connect_timeout": 60,  # Aumentato timeout di connessione
                     "application_name": "ocr-volantino-api",
                     "keepalives_idle": "300",  # Ridotto per connessioni più frequenti
                     "keepalives_interval": "10",  # Controlli più frequenti
                     "keepalives_count": "9",  # Più tentativi prima di considerare morta la connessione
-                    "tcp_user_timeout": "60000"  # Timeout TCP più lungo
+                    "tcp_user_timeout": "60000",  # Timeout TCP più lungo
+                    # Configurazione SSL per Render PostgreSQL
+                    "sslmode": "require",  # Richiede SSL
+                    "sslcert": None,  # Non richiede certificato client
+                    "sslkey": None,   # Non richiede chiave client
+                    "sslrootcert": None,  # Usa certificati di sistema
+                    "gssencmode": "disable"  # Disabilita GSSAPI encryption
                 }
                 
                 environment = os.getenv("ENVIRONMENT", "development")
@@ -223,18 +229,18 @@ class DatabaseManager:
                 print(f"🔒 Configurazione SSL mantenuta dall'URL PostgreSQL")
                 print(f"🔧 Configurazione connessione: {ssl_config}")
                 
-                # Configurazione connection pooling robusta per prevenire disconnessioni
+                # Configurazione connection pooling ottimizzata per Render (memoria limitata)
                 engine_kwargs.update({
                     "connect_args": ssl_config,
                     "pool_pre_ping": True,  # Testa connessioni prima dell'uso
-                    "pool_recycle": 900,  # Ricrea connessioni ogni 15 minuti (più frequente)
-                    "pool_timeout": 120,  # Timeout più lungo per ottenere connessioni
+                    "pool_recycle": 600,  # Ricrea connessioni ogni 10 minuti
+                    "pool_timeout": 60,  # Timeout ridotto per Render
                     "pool_reset_on_return": "commit",
-                    "pool_size": 5,  # Pool size ridotto per Render
-                    "max_overflow": 10,  # Overflow limitato
+                    "pool_size": 2,  # Pool size molto ridotto per Render free tier
+                    "max_overflow": 3,  # Overflow molto limitato
                     "isolation_level": "AUTOCOMMIT",
-                    # Parametri aggiuntivi per stabilità
-                    "echo_pool": True,  # Debug del pool
+                    # Parametri aggiuntivi per stabilità e memoria
+                    "echo_pool": False,  # Disabilita debug per risparmiare memoria
                     "pool_reset_on_return": "rollback"  # Reset più sicuro
                 })
             else:
@@ -766,15 +772,17 @@ class DatabaseManager:
                 last_exception = e
                 error_msg = str(e).lower()
                 
-                # Retry per errori di connessione comuni
+                # Retry per errori di connessione comuni, con focus su SSL
                 if any(conn_error in error_msg for conn_error in [
                     'ssl error', 'decryption failed', 'bad record mac',
+                    'ssl handshake', 'ssl connection', 'certificate',
                     'connection reset', 'broken pipe', 'connection lost',
                     'server closed the connection unexpectedly',
                     'connection terminated abnormally',
                     'connection timed out', 'connection refused',
                     'could not connect to server', 'no connection to the server',
-                    'connection pool exhausted', 'connection checkout timeout'
+                    'connection pool exhausted', 'connection checkout timeout',
+                    'tcp_user_timeout', 'keepalive'
                 ]):
                     print(f"🔄 Tentativo {attempt + 1}/{max_retries} fallito per errore di connessione: {e}")
                     if attempt < max_retries - 1:
