@@ -408,4 +408,4 @@ if __name__ == "__main__":
     )
     
     result = extractor.run("volantino.pdf", "file")
-    print(f"\nRisultato finale: {result}")
+    print(f"\nRisultato finale: {result}")# Fixed signal timeout issue for Render compatibility
