@@ -214,20 +214,22 @@ class SimplifiedGeminiExtractor:
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
         try:
-            # Configura timeout per evitare blocchi infiniti
-            import signal
+            # Configura timeout compatibile con background tasks
+            import concurrent.futures
+            import threading
             
-            def timeout_handler(signum, frame):
-                raise TimeoutError("Timeout nella chiamata a Gemini")
+            def call_gemini_with_timeout():
+                """Chiama Gemini in un thread separato con timeout"""
+                return model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
             
-            # Imposta timeout di 90 secondi per la chiamata a Gemini
-            signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(90)
-            
-            try:
-                raw_response = model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
-            finally:
-                signal.alarm(0)  # Disabilita il timeout
+            # Usa ThreadPoolExecutor per il timeout invece di signal
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(call_gemini_with_timeout)
+                try:
+                    # Timeout di 90 secondi
+                    raw_response = future.result(timeout=90)
+                except concurrent.futures.TimeoutError:
+                    raise TimeoutError("Timeout nella chiamata a Gemini")
             self.log_message(f"📄 Pagina {page_number}: Risposta grezza di Gemini:\n{raw_response}")
             
             match = re.search(r'\[.*\]', raw_response, re.DOTALL)
