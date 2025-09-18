@@ -233,92 +233,105 @@ class SimplifiedGeminiExtractor:
         self.log_message(f"✅ Pagina {page_number}: Immagine estratta, {page_image.width}x{page_image.height} pixel.")
         self.log_message(f"🤖 Pagina {page_number}: Invio a Gemini per l'analisi...")
         
-        # Usa la chiave API corrente
-        current_api_key = self.get_next_api_key()
-        genai.configure(api_key=current_api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        
+        # Prepara immagine una volta sola
         buffered = io.BytesIO()
         page_image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
-        try:
-            # Configura timeout compatibile con background tasks
-            import concurrent.futures
-            import threading
-            
-            def call_gemini_with_timeout():
-                """Chiama Gemini in un thread separato con timeout"""
-                return model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
-            
-            # Usa ThreadPoolExecutor per il timeout invece di signal
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(call_gemini_with_timeout)
-                try:
-                    # Timeout di 90 secondi
-                    raw_response = future.result(timeout=90)
-                except concurrent.futures.TimeoutError:
-                    raise TimeoutError("Timeout nella chiamata a Gemini")
-            self.log_message(f"📄 Pagina {page_number}: Risposta grezza di Gemini:\n{raw_response}")
-            
-            # Controlla se la risposta contiene "bounding_box"
-            if "bounding_box" in raw_response:
-                self.log_message(f"✅ Pagina {page_number}: Bounding box trovati nella risposta")
-            else:
-                self.log_message(f"⚠️ Pagina {page_number}: Nessun bounding_box nella risposta")
-            
-            match = re.search(r'\[.*\]', raw_response, re.DOTALL)
-            if match:
-                json_str = match.group(0)
-                products_on_page = json.loads(json_str)
+        # Tenta con più chiavi in caso di quota esaurita
+        last_error = None
+        for attempt_index in range(len(self.api_keys) if self.api_keys else 1):
+            try:
+                # Seleziona/ruota chiave
+                current_api_key = self.get_next_api_key()
+                genai.configure(api_key=current_api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 
-                # Process and save product images
-                processed_products = []
-                for i, product in enumerate(products_on_page):
-                    # Ensure date fields are present, even if null
-                    product.setdefault("data_inizio_offerta", None)
-                    product.setdefault("data_fine_offerta", None)
+                # Configura timeout compatibile con background tasks
+                import concurrent.futures
+                
+                def call_gemini_with_timeout():
+                    """Chiama Gemini in un thread separato con timeout"""
+                    return model.generate_content([prompt, {"mime_type": "image/png", "data": img_str}]).text
+                
+                # Usa ThreadPoolExecutor per il timeout invece di signal
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(call_gemini_with_timeout)
+                    try:
+                        # Timeout di 90 secondi
+                        raw_response = future.result(timeout=90)
+                    except concurrent.futures.TimeoutError:
+                        raise TimeoutError("Timeout nella chiamata a Gemini")
+                self.log_message(f"📄 Pagina {page_number}: Risposta grezza di Gemini:\n{raw_response}")
+                
+                # Controlla se la risposta contiene "bounding_box"
+                if "bounding_box" in raw_response:
+                    self.log_message(f"✅ Pagina {page_number}: Bounding box trovati nella risposta")
+                else:
+                    self.log_message(f"⚠️ Pagina {page_number}: Nessun bounding_box nella risposta")
+                
+                match = re.search(r'\[.*\]', raw_response, re.DOTALL)
+                if match:
+                    json_str = match.group(0)
+                    products_on_page = json.loads(json_str)
                     
-                    if "bounding_box" in product and product["bounding_box"]:
-                        self.log_message(f"🖼️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Ritaglio immagine con bbox {product['bounding_box']}")
-                        image_path = self.crop_and_save_product_image(page_image, product["bounding_box"], page_number, i + 1)
-                        product["immagine_prodotto"] = image_path
-                        # Aggiungi anche il path relativo per l'API
-                        if image_path:
-                            # Il path è già relativo alla directory corrente
-                            product["image_path"] = image_path
-                            product["image_url"] = f"/static/images/{Path(image_path).name}"
-                            self.log_message(f"✅ Prodotto {i+1}: Immagine salvata - URL: {product['image_url']}")
+                    # Process and save product images
+                    processed_products = []
+                    for i, product in enumerate(products_on_page):
+                        # Ensure date fields are present, even if null
+                        product.setdefault("data_inizio_offerta", None)
+                        product.setdefault("data_fine_offerta", None)
+                        
+                        if "bounding_box" in product and product["bounding_box"]:
+                            self.log_message(f"🖼️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Ritaglio immagine con bbox {product['bounding_box']}")
+                            image_path = self.crop_and_save_product_image(page_image, product["bounding_box"], page_number, i + 1)
+                            product["immagine_prodotto"] = image_path
+                            # Aggiungi anche il path relativo per l'API
+                            if image_path:
+                                # Il path è già relativo alla directory corrente
+                                product["image_path"] = image_path
+                                product["image_url"] = f"/static/images/{Path(image_path).name}"
+                                self.log_message(f"✅ Prodotto {i+1}: Immagine salvata - URL: {product['image_url']}")
+                            else:
+                                self.log_message(f"❌ Prodotto {i+1}: Fallito salvataggio immagine")
+                            del product["bounding_box"]  # Rimuovi il campo bounding_box
                         else:
-                            self.log_message(f"❌ Prodotto {i+1}: Fallito salvataggio immagine")
-                        del product["bounding_box"]  # Rimuovi il campo bounding_box
-                    else:
-                        self.log_message(f"⚠️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Nessun bounding_box trovato")
-                        product["immagine_prodotto"] = None
-                        product["image_path"] = None
-                        product["image_url"] = None
+                            self.log_message(f"⚠️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Nessun bounding_box trovato")
+                            product["immagine_prodotto"] = None
+                            product["image_path"] = None
+                            product["image_url"] = None
+                        
+                        # Salva nel database
+                        self.log_message(f"🔍 DEBUG: Struttura completa prodotto: {product}")
+                        self.log_message(f"🔍 DEBUG: Tentativo salvataggio prodotto: {product.get('nome', product.get('nome_prodotto', 'NOME_MANCANTE'))}")
+                        save_result = self.save_product_to_db(product)
+                        self.log_message(f"🔍 DEBUG: Risultato salvataggio: {save_result}")
+                        if save_result:
+                            processed_products.append(product)
+                            self.total_products_found += 1
+                            self.log_message(f"✅ DEBUG: Prodotto aggiunto a processed_products")
+                        else:
+                            self.log_message(f"❌ DEBUG: Prodotto NON aggiunto a processed_products")
                     
-                    # Salva nel database
-                    self.log_message(f"🔍 DEBUG: Struttura completa prodotto: {product}")
-                    self.log_message(f"🔍 DEBUG: Tentativo salvataggio prodotto: {product.get('nome', product.get('nome_prodotto', 'NOME_MANCANTE'))}")
-                    save_result = self.save_product_to_db(product)
-                    self.log_message(f"🔍 DEBUG: Risultato salvataggio: {save_result}")
-                    if save_result:
-                        processed_products.append(product)
-                        self.total_products_found += 1
-                        self.log_message(f"✅ DEBUG: Prodotto aggiunto a processed_products")
-                    else:
-                        self.log_message(f"❌ DEBUG: Prodotto NON aggiunto a processed_products")
-                
-                return {"page": page_number, "products": processed_products, "success": True, "error": None}
-            else:
-                return {"page": page_number, "products": [], "success": False, "error": "Nessun blocco JSON valido trovato."}
-        except ResourceExhausted:
-            return {"page": page_number, "products": [], "success": False, "error": "Quota di token esaurita. Attendi e riprova più tardi."}
-        except TimeoutError:
-            return {"page": page_number, "products": [], "success": False, "error": "Timeout nella chiamata a Gemini (90 secondi). La pagina verrà saltata."}
-        except Exception as e:
-            return {"page": page_number, "products": [], "success": False, "error": str(e)}
+                    return {"page": page_number, "products": processed_products, "success": True, "error": None}
+                else:
+                    return {"page": page_number, "products": [], "success": False, "error": "Nessun blocco JSON valido trovato."}
+            except ResourceExhausted as e:
+                last_error = str(e)
+                self.log_message(f"⚠️ Pagina {page_number}: Quota esaurita per la chiave corrente. Provo la prossima chiave...")
+                # Piccolo backoff per evitare burst
+                try:
+                    import time
+                    time.sleep(1.0)
+                except Exception:
+                    pass
+                continue
+            except TimeoutError:
+                return {"page": page_number, "products": [], "success": False, "error": "Timeout nella chiamata a Gemini (90 secondi). La pagina verrà saltata."}
+            except Exception as e:
+                return {"page": page_number, "products": [], "success": False, "error": str(e)}
+        # Se tutte le chiavi hanno fallito per quota
+        return {"page": page_number, "products": [], "success": False, "error": "Quota di token esaurita su tutte le chiavi configurate. Riprova più tardi."}
     
     def run(self, pdf_source=None, source_type="file", progress_callback=None):
         """Metodo principale per eseguire l'estrazione"""
