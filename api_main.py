@@ -424,8 +424,23 @@ async def upload_flyer(
         
         logger.info(f"Job {job_id} creato per file {file.filename}")
         
-        # Verifica se è disponibile la seconda chiave Gemini
-        optimization_status = "dual_key_enabled" if os.getenv('GEMINI_API_KEY_2') else "single_key"
+        # Verifica quante chiavi Gemini sono configurate (supporta GEMINI_API_KEYS e GEMINI_API_KEY_1..N)
+        configured_keys = []
+        env_keys = os.getenv('GEMINI_API_KEYS')
+        if env_keys:
+            parts = [p.strip() for p in env_keys.replace("\n", ",").replace(" ", ",").split(",")]
+            configured_keys = [k for k in parts if k]
+        else:
+            if os.getenv('GEMINI_API_KEY'):
+                configured_keys.append(os.getenv('GEMINI_API_KEY'))
+            if os.getenv('GEMINI_API_KEY_2'):
+                configured_keys.append(os.getenv('GEMINI_API_KEY_2'))
+            for i in range(1, 21):
+                k = os.getenv(f'GEMINI_API_KEY_{i}')
+                if k and k not in configured_keys:
+                    configured_keys.append(k)
+        num_keys = len(configured_keys) if configured_keys else (1 if os.getenv('GEMINI_API_KEY') else 0)
+        optimization_status = f"multi_key_{num_keys}" if num_keys > 1 else "single_key"
         
         return {
             "success": True,
@@ -436,6 +451,7 @@ async def upload_flyer(
             "filename": file.filename,
             "file_size": file_size,
             "optimization": optimization_status,
+            "gemini_keys_configured": num_keys,
             "check_status_url": get_job_url(job_id),
             "results_url": get_results_url(job_id),
             "products_url": get_products_url(job_id),
