@@ -4,6 +4,7 @@ services:
     env: python
     buildCommand: pip install -r requirements-render.txt
     startCommand: gunicorn api_main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 1200 --worker-timeout 1200 --graceful-timeout 1200 --max-requests 100 --max-requests-jitter 10 --preload
+    healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
