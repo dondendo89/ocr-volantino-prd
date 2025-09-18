@@ -222,10 +222,9 @@
         </div>
 
         <div class="controls">
-            <div class="input-group">
-                <label for="jobId">Job ID:</label>
-                <input type="text" id="jobId" placeholder="Inserisci l'ID del job (es: 29e66e6b-93cb-4981-80e4-8d4c5d6003e4)" value="29e66e6b-93cb-4981-80e4-8d4c5d6003e4">
-                <button class="btn" onclick="loadProducts()">Carica Prodotti</button>
+            <div class="input-group" style="justify-content: space-between;">
+                <div style="font-weight:600;color:#333;">Seleziona un supermercato per vedere i prodotti associati</div>
+                <button class="btn" onclick="loadSupermarkets()">Aggiorna elenco supermercati</button>
             </div>
         </div>
 
@@ -235,7 +234,9 @@
 
         <div id="error" class="error" style="display: none;"></div>
 
-        <div id="products" class="products-grid"></div>
+        <div id="supermarkets" class="products-grid"></div>
+
+        <div id="products" class="products-grid" style="display:none;"></div>
 
         <div id="no-products" class="no-products" style="display: none;">
             📦 Nessun prodotto trovato per questo job
@@ -248,48 +249,127 @@
             ? 'http://localhost:8000' 
             : 'https://ocr-volantino-api.onrender.com';
 
-        async function loadProducts() {
-            const jobId = document.getElementById('jobId').value.trim();
-            
-            if (!jobId) {
-                showError('Inserisci un Job ID valido');
+        async function loadSupermarkets() {
+            showLoading(true);
+            hideError();
+            clearAll();
+
+            try {
+                const resp = await fetch(`${API_BASE}/products-by-supermarket`);
+                if (!resp.ok) throw new Error(`Errore caricamento supermercati: ${resp.status}`);
+                const data = await resp.json();
+                const supermarkets = data.supermarkets || [];
+                showLoading(false);
+                displaySupermarkets(supermarkets);
+            } catch (e) {
+                showLoading(false);
+                showError(`Errore: ${e.message}`);
+            }
+        }
+
+        function displaySupermarkets(supermarkets) {
+            const container = document.getElementById('supermarkets');
+            const productsContainer = document.getElementById('products');
+            productsContainer.style.display = 'none';
+            container.style.display = 'grid';
+
+            if (!supermarkets || supermarkets.length === 0) {
+                container.innerHTML = '';
+                document.getElementById('no-products').style.display = 'block';
+                document.getElementById('no-products').textContent = 'Nessun supermercato disponibile';
                 return;
             }
 
-            showLoading(true);
-            hideError();
-            clearProducts();
+            container.innerHTML = supermarkets.map((s, idx) => `
+                <div class="product-card" style="cursor:pointer" onclick="showSupermarketProducts(${idx})">
+                    <div class="product-header">
+                        <div class="product-name">${s.nome || 'Supermercato'}</div>
+                        <div class="product-price" style="background:#e8f5e9;color:#2e7d32">${s.total_products || 0} prodotti</div>
+                    </div>
+                    <div class="product-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Jobs</div>
+                            <div class="detail-value">${(s.jobs || []).length}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Ultimo job</div>
+                            <div class="detail-value">${formatLastJobDate(s.jobs)}</div>
+                        </div>
+                    </div>
+                    <div class="product-meta">
+                        Clicca per vedere i prodotti
+                    </div>
+                </div>
+            `).join('');
 
+            // conserva in memoria per click
+            window.__SUPERMARKETS_CACHE__ = supermarkets;
+        }
+
+        function formatLastJobDate(jobs) {
+            if (!jobs || jobs.length === 0) return 'N/A';
             try {
-                // Prima verifica lo stato del job
-                const jobResponse = await fetch(`${API_BASE}/jobs/${jobId}`);
-                
-                if (!jobResponse.ok) {
-                    throw new Error(`Job non trovato: ${jobResponse.status}`);
-                }
+                const sorted = [...jobs].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                return new Date(sorted[0].created_at).toLocaleString('it-IT');
+            } catch(e) { return 'N/A'; }
+        }
 
-                const jobData = await jobResponse.json();
-                
-                if (jobData.status !== 'completed') {
-                    throw new Error(`Job non completato. Status: ${jobData.status}`);
-                }
+        function showSupermarketProducts(index) {
+            const supermarkets = window.__SUPERMARKETS_CACHE__ || [];
+            const s = supermarkets[index];
+            if (!s) return;
 
-                // Carica i prodotti
-                const productsResponse = await fetch(`${API_BASE}/products/${jobId}`);
-                
-                if (!productsResponse.ok) {
-                    throw new Error(`Errore nel caricamento prodotti: ${productsResponse.status}`);
-                }
+            const supermarketsContainer = document.getElementById('supermarkets');
+            const productsContainer = document.getElementById('products');
+            supermarketsContainer.style.display = 'none';
+            productsContainer.style.display = 'grid';
 
-                const products = await productsResponse.json();
-                
-                showLoading(false);
-                displayProducts(products, jobData);
-                
-            } catch (error) {
-                showLoading(false);
-                showError(`Errore: ${error.message}`);
-            }
+            // Header informativo
+            const headerHtml = `
+                <div class="product-card" style="grid-column: 1 / -1; background:#f4f6f8">
+                    <div class="product-header">
+                        <div class="product-name">🛍️ ${s.nome}</div>
+                        <button class="btn" onclick="backToSupermarkets()">← Torna ai supermercati</button>
+                    </div>
+                    <div class="product-meta">${(s.products || []).length} prodotti totali</div>
+                </div>
+            `;
+
+            productsContainer.innerHTML = headerHtml + (s.products || []).map(product => `
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-name">${product.nome || 'Nome non disponibile'}</div>
+                        <div class="product-price">€${(product.prezzo || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="product-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Marca</div>
+                            <div class="detail-value">${product.marca || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Categoria</div>
+                            <div class="detail-value">${product.categoria || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Quantità</div>
+                            <div class="detail-value">${product.quantita || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Prezzo Originale</div>
+                            <div class="detail-value">€${(product.prezzo_originale || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                    <div class="product-meta">
+                        <div>Estratto il: ${product.extracted_at ? new Date(product.extracted_at).toLocaleString('it-IT') : 'N/A'}</div>
+                        ${product.image_url ? `<div style="margin-top:8px"><a href="${product.image_url}" target="_blank">Apri immagine prodotto</a></div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function backToSupermarkets() {
+            document.getElementById('products').style.display = 'none';
+            document.getElementById('supermarkets').style.display = 'grid';
         }
 
         function displayProducts(products, jobData) {
@@ -352,12 +432,22 @@
 
         function clearProducts() {
             document.getElementById('products').innerHTML = '';
+            document.getElementById('products').style.display = 'none';
             document.getElementById('no-products').style.display = 'none';
+        }
+
+        function clearSupermarkets() {
+            document.getElementById('supermarkets').innerHTML = '';
+        }
+
+        function clearAll() {
+            clearProducts();
+            clearSupermarkets();
         }
 
         // Carica automaticamente i prodotti all'avvio
         window.addEventListener('load', () => {
-            loadProducts();
+            loadSupermarkets();
         });
     </script>
 </body>
