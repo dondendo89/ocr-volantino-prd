@@ -52,6 +52,12 @@ class SimplifiedGeminiExtractor:
         self.product_images_dir = Path("simplified_gemini_product_images")
         self.product_images_dir.mkdir(exist_ok=True)
         
+        # Assicurati che la directory static/images esista
+        self.static_images_dir = Path("static/images")
+        self.static_images_dir.mkdir(parents=True, exist_ok=True)
+        
+        logger.info(f"✅ Directory immagini create: {self.product_images_dir}, {self.static_images_dir}")
+        
         # Inizializza il generatore di card prodotto
         self.card_generator = ProductCardGenerator()
         
@@ -125,9 +131,7 @@ class SimplifiedGeminiExtractor:
             cropped_image.save(image_path)
             
             # Copia anche nella directory static/images per l'accesso web
-            static_images_dir = Path("static/images")
-            static_images_dir.mkdir(exist_ok=True)
-            static_image_path = static_images_dir / image_name
+            static_image_path = self.static_images_dir / image_name
             cropped_image.save(static_image_path)
             
             self.log_message(f"✅ Immagine del prodotto salvata in: {image_path}")
@@ -232,6 +236,12 @@ class SimplifiedGeminiExtractor:
                     raise TimeoutError("Timeout nella chiamata a Gemini")
             self.log_message(f"📄 Pagina {page_number}: Risposta grezza di Gemini:\n{raw_response}")
             
+            # Controlla se la risposta contiene "bounding_box"
+            if "bounding_box" in raw_response:
+                self.log_message(f"✅ Pagina {page_number}: Bounding box trovati nella risposta")
+            else:
+                self.log_message(f"⚠️ Pagina {page_number}: Nessun bounding_box nella risposta")
+            
             match = re.search(r'\[.*\]', raw_response, re.DOTALL)
             if match:
                 json_str = match.group(0)
@@ -245,6 +255,7 @@ class SimplifiedGeminiExtractor:
                     product.setdefault("data_fine_offerta", None)
                     
                     if "bounding_box" in product and product["bounding_box"]:
+                        self.log_message(f"🖼️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Ritaglio immagine con bbox {product['bounding_box']}")
                         image_path = self.crop_and_save_product_image(page_image, product["bounding_box"], page_number, i + 1)
                         product["immagine_prodotto"] = image_path
                         # Aggiungi anche il path relativo per l'API
@@ -252,8 +263,12 @@ class SimplifiedGeminiExtractor:
                             # Il path è già relativo alla directory corrente
                             product["image_path"] = image_path
                             product["image_url"] = f"/static/images/{Path(image_path).name}"
+                            self.log_message(f"✅ Prodotto {i+1}: Immagine salvata - URL: {product['image_url']}")
+                        else:
+                            self.log_message(f"❌ Prodotto {i+1}: Fallito salvataggio immagine")
                         del product["bounding_box"]  # Rimuovi il campo bounding_box
                     else:
+                        self.log_message(f"⚠️ Prodotto {i+1} ({product.get('nome', 'N/A')}): Nessun bounding_box trovato")
                         product["immagine_prodotto"] = None
                         product["image_path"] = None
                         product["image_url"] = None
