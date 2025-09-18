@@ -37,13 +37,38 @@ class SimplifiedGeminiExtractor:
         self.supermercato_nome = supermercato_nome
         self.current_key_index = 0
         
-        # Configura le chiavi API
-        self.api_keys = [self.gemini_api_key]
-        if self.gemini_api_key_2:
-            self.api_keys.append(self.gemini_api_key_2)
-            logger.info("✅ Configurate 2 chiavi API Gemini per ottimizzazione rate limiting")
+        # Configura le chiavi API (supporto multi-chiave)
+        # Priorità: GEMINI_API_KEYS (separato da virgole) > GEMINI_API_KEY + GEMINI_API_KEY_2 > GEMINI_API_KEY_1..N
+        env_keys = os.getenv('GEMINI_API_KEYS')
+        keys: list[str] = []
+        if env_keys:
+            # Supporta separatori virgola o spazi/nuove linee
+            raw_parts = [p.strip() for p in env_keys.replace("\n", ",").replace(" ", ",").split(",")]
+            keys = [k for k in raw_parts if k]
         else:
-            logger.info("✅ Configurata 1 chiave API Gemini")
+            # Colleziona chiavi singole note
+            if self.gemini_api_key:
+                keys.append(self.gemini_api_key)
+            if self.gemini_api_key_2:
+                keys.append(self.gemini_api_key_2)
+            # Cerca chiavi numerate GEMINI_API_KEY_1..GEMINI_API_KEY_20
+            for i in range(1, 21):
+                k = os.getenv(f'GEMINI_API_KEY_{i}')
+                if k and k not in keys:
+                    keys.append(k)
+        # Fallback se ancora vuoto
+        if not keys and self.gemini_api_key:
+            keys = [self.gemini_api_key]
+
+        # Deduplica mantenendo l'ordine
+        seen = set()
+        self.api_keys = []
+        for k in keys:
+            if k and k not in seen:
+                self.api_keys.append(k)
+                seen.add(k)
+
+        logger.info(f"✅ Configurate {len(self.api_keys)} chiavi API Gemini")
         
         # Crea directory per le immagini
         self.temp_dir = Path(f"temp_processing_{job_id}" if job_id else "temp_processing")
